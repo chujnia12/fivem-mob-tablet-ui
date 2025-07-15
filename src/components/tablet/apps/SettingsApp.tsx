@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Shield, Users, DollarSign, Bell, Settings, Lock, Crown, User } from 'lucide-react';
+import { ArrowLeft, Shield, Users, DollarSign, Bell, Settings, Lock, Crown, User, Plus, Coins } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { ScrollArea } from '../../ui/scroll-area';
 
@@ -9,13 +8,17 @@ interface SettingsAppProps {
     name: string;
     rank: number;
     id: number;
+    balance: number;
+    crypto_balance: number;
   };
   onHome: () => void;
+  onPurchase?: (item: string, price: number) => boolean;
 }
 
-const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
-  const [selectedCategory, setSelectedCategory] = useState('permissions');
+const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome, onPurchase }) => {
+  const [selectedCategory, setSelectedCategory] = useState('organization');
   const [selectedRank, setSelectedRank] = useState('CZŁONEK');
+  const [memberSlots, setMemberSlots] = useState(25); // Current member slots
 
   // TODO: Fetch from orgmdt-uprawnienia table based on rank
   const ranks = ['CZŁONEK', 'STARSZY CZŁONEK', 'ZASTĘPCA', 'SZEF'];
@@ -47,13 +50,31 @@ const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
   ];
 
   const categories = [
-    { id: 'permissions', name: 'Uprawnienia', icon: Shield, color: 'text-red-400' },
     { id: 'organization', name: 'Organizacja', icon: Users, color: 'text-blue-400' },
+    { id: 'permissions', name: 'Uprawnienia', icon: Shield, color: 'text-red-400' },
     { id: 'finance', name: 'Finanse', icon: DollarSign, color: 'text-green-400' },
     { id: 'notifications', name: 'Powiadomienia', icon: Bell, color: 'text-yellow-400' },
     { id: 'security', name: 'Bezpieczeństwo', icon: Lock, color: 'text-purple-400' },
     { id: 'system', name: 'System', icon: Settings, color: 'text-gray-400' }
   ];
+
+  const slotUpgrades = [
+    { slots: 5, price: 2.5, description: '+5 slotów członków' },
+    { slots: 10, price: 4.5, description: '+10 slotów członków' },
+    { slots: 25, price: 10.0, description: '+25 slotów członków' }
+  ];
+
+  const handlePurchaseSlots = (slots: number, price: number) => {
+    if (onPurchase && onPurchase(`member_slots_${slots}`, price)) {
+      setMemberSlots(prev => prev + slots);
+      console.log('SQL Update:', {
+        query: 'UPDATE organizations SET member_slots = ? WHERE id = ?',
+        params: [memberSlots + slots, orgData.id]
+      });
+    } else {
+      alert('Niewystarczające środki!');
+    }
+  };
 
   const getRankIcon = (rank: string) => {
     switch (rank) {
@@ -66,6 +87,104 @@ const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
 
   const renderSettings = () => {
     switch (selectedCategory) {
+      case 'organization':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 mb-6">
+              <Users className="text-blue-400" size={24} />
+              <h2 className="text-xl font-medium">Ustawienia Organizacji</h2>
+            </div>
+
+            {/* Member Slots Management */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+              <h3 className="text-lg font-medium mb-4 flex items-center gap-2">
+                <Users size={20} className="text-blue-400" />
+                Sloty Członków
+              </h3>
+              
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-white/80">Aktualnie dostępne sloty:</span>
+                  <span className="text-2xl font-bold text-blue-400">{memberSlots}</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min((memberSlots / 50) * 100, 100)}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-white/60 mt-1">
+                  Maksymalne wykorzystanie: {memberSlots}/50 członków
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-medium text-white mb-3">Zwiększ liczbę slotów:</h4>
+                {slotUpgrades.map((upgrade, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                        <Plus size={16} className="text-blue-400" />
+                      </div>
+                      <div>
+                        <h5 className="font-medium text-white">{upgrade.description}</h5>
+                        <p className="text-sm text-white/60">Zwiększ limit członków organizacji</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-orange-400">{upgrade.price} COIN</p>
+                      </div>
+                      <Button
+                        onClick={() => handlePurchaseSlots(upgrade.slots, upgrade.price)}
+                        disabled={orgData.crypto_balance < upgrade.price}
+                        className={`${
+                          orgData.crypto_balance >= upgrade.price
+                            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                            : 'bg-gray-600/20 border-gray-500/30 text-gray-500 cursor-not-allowed'
+                        } rounded-xl flex items-center gap-2`}
+                      >
+                        <Coins size={16} />
+                        Kup
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Existing Organization Settings */}
+            <div className="space-y-4">
+              {organizationSettings.map((setting) => (
+                <div key={setting.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="font-medium text-white">{setting.name}</h3>
+                        <div className={`px-2 py-1 rounded-lg text-xs ${
+                          setting.enabled ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {setting.enabled ? 'Włączone' : 'Wyłączone'}
+                        </div>
+                      </div>
+                      <p className="text-white/60 text-sm">{setting.description}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant={setting.enabled ? "default" : "outline"}
+                      className={`ml-4 ${setting.enabled 
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                        : 'border-white/20 text-white/80 hover:bg-white/10 bg-transparent'} rounded-xl`}
+                    >
+                      {setting.enabled ? 'Wyłącz' : 'Włącz'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      
       case 'permissions':
         return (
           <div className="space-y-4">
@@ -127,42 +246,6 @@ const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
                       : 'border-white/20 text-white/80 hover:bg-white/10 bg-transparent'} rounded-xl`}
                   >
                     {permission.enabled ? 'Wyłącz' : 'Włącz'}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
-      
-      case 'organization':
-        return (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-6">
-              <Users className="text-blue-400" size={24} />
-              <h2 className="text-xl font-medium">Ustawienia Organizacji</h2>
-            </div>
-            {organizationSettings.map((setting) => (
-              <div key={setting.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-medium text-white">{setting.name}</h3>
-                      <div className={`px-2 py-1 rounded-lg text-xs ${
-                        setting.enabled ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'
-                      }`}>
-                        {setting.enabled ? 'Włączone' : 'Wyłączone'}
-                      </div>
-                    </div>
-                    <p className="text-white/60 text-sm">{setting.description}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant={setting.enabled ? "default" : "outline"}
-                    className={`ml-4 ${setting.enabled 
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                      : 'border-white/20 text-white/80 hover:bg-white/10 bg-transparent'} rounded-xl`}
-                  >
-                    {setting.enabled ? 'Wyłącz' : 'Włącz'}
                   </Button>
                 </div>
               </div>
@@ -234,9 +317,15 @@ const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
             <h1 className="text-xl font-medium">Ustawienia Organizacji</h1>
           </div>
         </div>
-        <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
-          <span className="text-white/60 text-sm">Organizacja: </span>
-          <span className="text-white font-medium">{orgData.name}</span>
+        <div className="flex items-center gap-4">
+          <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
+            <span className="text-white/60 text-sm">Saldo krypto: </span>
+            <span className="text-orange-400 font-bold">{orgData.crypto_balance.toFixed(2)} COIN</span>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
+            <span className="text-white/60 text-sm">Organizacja: </span>
+            <span className="text-white font-medium">{orgData.name}</span>
+          </div>
         </div>
       </div>
 

@@ -9,7 +9,9 @@ import {
   ShoppingCart,
   CheckCircle,
   Loader,
-  AlertCircle
+  AlertCircle,
+  Star,
+  Users
 } from 'lucide-react';
 import { AppType } from '../../../pages/TabletOS';
 
@@ -45,7 +47,10 @@ const AppsApp: React.FC<AppsAppProps> = ({
       description: 'Zarządzaj zleceniami organizacji',
       icon: Briefcase,
       price: 2.5,
-      color: 'bg-red-600'
+      color: 'bg-red-600',
+      category: 'Biznes',
+      rating: 4.8,
+      size: '12.5 MB'
     },
     {
       id: 'kryptowaluty' as AppType,
@@ -53,7 +58,10 @@ const AppsApp: React.FC<AppsAppProps> = ({
       description: 'Handel kryptowalutami',
       icon: Bitcoin,
       price: 3.2,
-      color: 'bg-yellow-600'
+      color: 'bg-yellow-600',
+      category: 'Finanse',
+      rating: 4.6,
+      size: '8.2 MB'
     },
     {
       id: 'napady' as AppType,
@@ -61,7 +69,10 @@ const AppsApp: React.FC<AppsAppProps> = ({
       description: 'Planowanie i wykonywanie napadów',
       icon: Crosshair,
       price: 4.8,
-      color: 'bg-pink-600'
+      color: 'bg-pink-600',
+      category: 'Akcja',
+      rating: 4.9,
+      size: '15.7 MB'
     },
   ];
 
@@ -95,9 +106,9 @@ const AppsApp: React.FC<AppsAppProps> = ({
     switch (status) {
       case 'installed':
         return (
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-600/20 border border-green-500/30 rounded-xl text-green-400">
-            <CheckCircle size={16} />
-            <span className="text-sm font-medium">Zainstalowana</span>
+          <div className="flex items-center justify-center w-20 h-8 bg-gray-100 rounded-full">
+            <CheckCircle size={14} className="text-green-600 mr-1" />
+            <span className="text-xs font-medium text-gray-700">Otwórz</span>
           </div>
         );
       
@@ -105,18 +116,18 @@ const AppsApp: React.FC<AppsAppProps> = ({
         return (
           <button
             onClick={() => handleDownload(app.id)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 hover:bg-blue-600/30 transition-all duration-200"
+            className="flex items-center justify-center w-20 h-8 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors"
           >
-            <Download size={16} />
-            <span className="text-sm font-medium">Pobierz</span>
+            <Download size={14} className="text-white mr-1" />
+            <span className="text-xs font-medium text-white">Pobierz</span>
           </button>
         );
       
       case 'downloading':
         return (
-          <div className="flex items-center gap-2 px-4 py-2 bg-purple-600/20 border border-purple-500/30 rounded-xl text-purple-400">
-            <Loader size={16} className="animate-spin" />
-            <span className="text-sm font-medium">Pobieranie...</span>
+          <div className="flex items-center justify-center w-20 h-8 bg-gray-100 rounded-full">
+            <Loader size={14} className="animate-spin text-blue-600 mr-1" />
+            <span className="text-xs font-medium text-gray-700">Pobieranie</span>
           </div>
         );
       
@@ -125,95 +136,107 @@ const AppsApp: React.FC<AppsAppProps> = ({
           <button
             onClick={() => handlePurchase(app.id, app.price)}
             disabled={orgData.crypto_balance < app.price}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+            className={`flex items-center justify-center w-20 h-8 rounded-full transition-colors ${
               orgData.crypto_balance >= app.price
-                ? 'bg-orange-600/20 border border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
-                : 'bg-gray-600/20 border border-gray-500/30 text-gray-500 cursor-not-allowed'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
-            <ShoppingCart size={16} />
-            <span>Kup za {app.price} COIN</span>
-            {orgData.crypto_balance < app.price && <AlertCircle size={14} />}
+            <span className="text-xs font-medium">
+              {orgData.crypto_balance >= app.price ? `${app.price} COIN` : 'Brak środków'}
+            </span>
           </button>
         );
     }
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-black to-blue-900/10"></div>
-      
-      <div className="relative z-10 h-full flex flex-col">
-        {/* Header */}
-        <div className="p-8 pb-4">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Sklep z aplikacjami</h1>
-              <p className="text-white/60">Rozszerz funkcjonalność swojego tabletu</p>
-            </div>
-            <div className="bg-black/40 backdrop-blur-sm rounded-2xl px-6 py-3 border border-white/20">
-              <div className="text-center">
-                <p className="text-white/60 text-sm">Saldo krypto</p>
-                <p className="text-yellow-400 font-bold text-xl">{orgData.crypto_balance.toFixed(2)} COIN</p>
-              </div>
+    <div className="h-full bg-white flex flex-col">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={onHome}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <ArrowLeft size={20} className="text-blue-600" />
+          </button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold text-gray-900">App Store</h1>
+          </div>
+          <div className="bg-gray-100 rounded-lg px-3 py-2">
+            <div className="text-center">
+              <p className="text-xs text-gray-500">Saldo</p>
+              <p className="text-sm font-bold text-orange-600">{orgData.crypto_balance.toFixed(2)} COIN</p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Apps Grid */}
-        <div className="flex-1 px-8 pb-8 overflow-y-auto custom-scrollbar">
-          <div className="grid grid-cols-1 gap-6">
-            {availableApps.map((app) => {
-              const status = getAppStatus(app.id);
-              return (
-                <div
-                  key={app.id}
-                  className="bg-black/40 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:bg-black/60 transition-all duration-200"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-16 h-16 ${app.color} rounded-2xl flex items-center justify-center`}>
-                        <app.icon size={28} className="text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-white mb-1">{app.name}</h3>
-                        <p className="text-white/60 text-sm">{app.description}</p>
-                        <div className="flex items-center gap-4 mt-2">
-                          <span className="text-yellow-400 font-bold">
-                            {status === 'available' ? `${app.price} COIN` : 'Zakupiono'}
-                          </span>
-                          {status === 'installed' && (
-                            <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded-full">
-                              Zainstalowana
-                            </span>
-                          )}
-                          {status === 'purchased' && (
-                            <span className="text-blue-400 text-xs bg-blue-500/20 px-2 py-1 rounded-full">
-                              Gotowa do pobrania
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {renderActionButton(app)}
-                  </div>
+      {/* Featured Section */}
+      <div className="px-4 py-6 bg-gradient-to-r from-blue-50 to-purple-50">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Polecane</h2>
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+              <Crosshair size={24} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-bold text-gray-900">Napady</h3>
+              <p className="text-sm text-gray-600">Planowanie i wykonywanie napadów</p>
+              <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center">
+                  <Star size={12} className="text-yellow-500 fill-current" />
+                  <span className="text-xs text-gray-600 ml-1">4.9</span>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Info section */}
-          <div className="mt-8 bg-blue-900/20 border border-blue-500/30 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-blue-400 mb-3">Informacje o zakupach</h3>
-            <div className="space-y-2 text-sm text-white/80">
-              <p>• Aplikacje kupujesz za kryptowaluty COIN</p>
-              <p>• Po zakupie możesz pobrać aplikację w dowolnym momencie</p>
-              <p>• Zainstalowane aplikacje są dostępne na ekranie głównym</p>
-              <p>• Zakupione aplikacje są przypisane do Twojej organizacji</p>
+                <span className="text-xs text-gray-400">•</span>
+                <span className="text-xs text-gray-600">Akcja</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-bold text-blue-600">4.8 COIN</p>
+              {renderActionButton(availableApps[2])}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Apps List */}
+      <div className="flex-1 px-4 py-6 overflow-y-auto custom-scrollbar">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Wszystkie aplikacje</h2>
+        <div className="space-y-4">
+          {availableApps.map((app) => (
+            <div
+              key={app.id}
+              className="bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-4">
+                <div className={`w-14 h-14 ${app.color} rounded-2xl flex items-center justify-center shadow-sm`}>
+                  <app.icon size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900">{app.name}</h3>
+                  <p className="text-sm text-gray-600 mb-1">{app.description}</p>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <div className="flex items-center">
+                      <Star size={12} className="text-yellow-500 fill-current mr-1" />
+                      <span>{app.rating}</span>
+                    </div>
+                    <span>•</span>
+                    <span>{app.category}</span>
+                    <span>•</span>
+                    <span>{app.size}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-blue-600 mb-2">
+                    {getAppStatus(app.id) === 'available' ? `${app.price} COIN` : 'Zakupiono'}
+                  </p>
+                  {renderActionButton(app)}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

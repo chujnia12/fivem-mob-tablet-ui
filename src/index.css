@@ -107,67 +107,96 @@ All colors MUST be HSL.
 
 /* Custom scrollbar styles */
 @layer utilities {
-  /* Universal custom scrollbar matching members section */
+  /* Universal custom scrollbar */
   .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(31, 41, 55, 0.3);
+    scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.1);
   }
   
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(31, 41, 55, 0.3);
-    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    margin: 2px;
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
   
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:active {
+    background: rgba(255, 255, 255, 0.35);
+  }
+  
+  /* White background scrollbar for light themes */
+  .custom-scrollbar-light {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) rgba(0, 0, 0, 0.05);
+  }
+  
+  .custom-scrollbar-light::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .custom-scrollbar-light::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    margin: 2px;
+  }
+  
+  .custom-scrollbar-light::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .custom-scrollbar-light::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  .custom-scrollbar-light::-webkit-scrollbar-thumb:active {
+    background: rgba(0, 0, 0, 0.35);
   }
   
   /* Legacy scrollbar classes for backward compatibility */
   .scrollbar-thin {
     scrollbar-width: thin;
-  }
-  
-  .scrollbar-track-gray-800\/50::-webkit-scrollbar-track {
-    background: rgba(31, 41, 55, 0.5);
-    border-radius: 0.5rem;
-  }
-  
-  .scrollbar-thumb-white\/20::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 0.5rem;
-  }
-  
-  .scrollbar-thumb-white\/20:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3);
+    scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.1);
   }
   
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: rgba(31, 41, 55, 0.5);
-    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    margin: 2px;
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
   }
   
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.1);
   }
   
   /* Animation for fade-in */
@@ -184,5 +213,13 @@ All colors MUST be HSL.
   
   .animate-fade-in {
     animation: fade-in 0.2s ease-out;
+  }
+
+  /* Line clamp utility */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }

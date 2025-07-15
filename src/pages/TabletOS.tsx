@@ -12,13 +12,14 @@ import ZleceniaApp from '../components/tablet/apps/ZleceniaApp';
 import KryptowalutyApp from '../components/tablet/apps/KryptowalutyApp';
 import AppsApp from '../components/tablet/apps/AppsApp';
 import NapadyApp from '../components/tablet/apps/NapadyApp';
+import NotesApp from '../components/tablet/apps/NotesApp';
 import NotificationSystem from '../components/tablet/NotificationSystem';
 
-export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats' | 'zlecenia' | 'kryptowaluty' | 'apps' | 'napady';
+export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats' | 'zlecenia' | 'kryptowaluty' | 'apps' | 'napady' | 'notes';
 
 const TabletOS = () => {
   const [currentApp, setCurrentApp] = useState<AppType>('home');
-  const [installedApps, setInstalledApps] = useState<AppType[]>(['finance', 'members', 'transactions', 'orders', 'settings', 'stats', 'apps']);
+  const [installedApps, setInstalledApps] = useState<AppType[]>(['finance', 'members', 'transactions', 'orders', 'settings', 'stats', 'apps', 'notes']);
   const [purchasedApps, setPurchasedApps] = useState<AppType[]>([]);
   
   // TODO: Replace with Lua/SQL integration
@@ -56,6 +57,17 @@ const TabletOS = () => {
     return false;
   };
 
+  const purchaseItem = (item: string, price: number) => {
+    if (orgData.crypto_balance >= price) {
+      setOrgData(prev => ({
+        ...prev,
+        crypto_balance: prev.crypto_balance - price
+      }));
+      return true;
+    }
+    return false;
+  };
+
   const getRankName = (rankNumber: number) => {
     const ranks = {
       1: 'CZŁONEK',
@@ -80,9 +92,11 @@ const TabletOS = () => {
       case 'orders':
         return <OrdersApp orgData={orgData} onHome={goHome} />;
       case 'settings':
-        return <SettingsApp orgData={orgData} onHome={goHome} />;
+        return <SettingsApp orgData={orgData} onHome={goHome} onPurchase={purchaseItem} />;
       case 'stats':
         return <StatsApp orgData={orgData} onHome={goHome} />;
+      case 'notes':
+        return <NotesApp orgData={orgData} onHome={goHome} />;
       case 'zlecenia':
         return installedApps.includes('zlecenia') ? <ZleceniaApp orgData={orgData} onHome={goHome} /> : <div>App not installed</div>;
       case 'kryptowaluty':
@@ -97,12 +111,12 @@ const TabletOS = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
+    <div className="w-full h-screen bg-gray-900 flex items-center justify-center overflow-hidden">
       <div className="relative">
         {/* Tablet Frame - Thinner borders */}
-        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-700">
+        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2rem] p-1.5 shadow-2xl border border-gray-700">
           {/* Screen */}
-          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[2rem] overflow-hidden relative border border-gray-800">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[1.5rem] overflow-hidden relative border border-gray-800">
             {/* Status Bar */}
             <div className="flex justify-between items-center px-6 py-3 text-white text-sm bg-black/20 backdrop-blur-sm border-b border-white/5 relative z-30">
               <div className="flex items-center gap-1">
@@ -131,18 +145,6 @@ const TabletOS = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Back Button */}
-            {currentApp !== 'home' && (
-              <div className="absolute top-20 left-6 z-40">
-                <button
-                  onClick={goHome}
-                  className="bg-black/40 backdrop-blur-md border border-white/20 rounded-2xl p-3 hover:bg-black/60 transition-all duration-200 shadow-2xl text-white"
-                >
-                  <ArrowLeft size={20} />
-                </button>
-              </div>
-            )}
             
             {/* App Content */}
             <div className="h-[calc(100%-3.5rem)] relative">
