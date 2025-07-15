@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, RefreshCw, DollarSign, CreditCard, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, RefreshCw, DollarSign, CreditCard, ArrowUpDown, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
@@ -29,6 +30,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
   const [transferAmount, setTransferAmount] = useState('');
   const [transferWallet, setTransferWallet] = useState('');
   const [transferCrypto, setTransferCrypto] = useState('LCOIN');
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
   // TODO: Fetch from database - crypto_wallets table
   const [wallets, setWallets] = useState([
@@ -161,6 +163,12 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
     setTransferAmount('');
     setTransferWallet('');
     setIsTransferring(false);
+  };
+
+  const copyToClipboard = (address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedAddress(address);
+    setTimeout(() => setCopiedAddress(null), 2000);
   };
 
   const formatCurrency = (amount: number) => {
@@ -382,7 +390,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
           {/* Wallets */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Twoje portfele</h3>
-            <ScrollArea className="h-full [&>div>div]:!block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
+            <ScrollArea className="h-full custom-scrollbar">
               <div className="space-y-4 pr-4">
                 {wallets.map((wallet) => (
                   <div key={wallet.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
@@ -426,7 +434,20 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
 
                     <div className="bg-white/5 rounded-xl p-3">
                       <div className="text-white/60 text-xs mb-1">Adres portfela:</div>
-                      <div className="text-white/80 text-sm font-mono break-all">{wallet.address}</div>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-white/80 text-sm font-mono break-all flex-1">{wallet.address}</div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(wallet.address)}
+                          className="text-white/60 hover:text-white hover:bg-white/10 p-1 h-auto min-w-0"
+                        >
+                          {copiedAddress === wallet.address ? 
+                            <Check size={14} className="text-green-400" /> : 
+                            <Copy size={14} />
+                          }
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -437,7 +458,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
           {/* Transactions */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Ostatnie transakcje</h3>
-            <ScrollArea className="h-full [&>div>div]:!block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
+            <ScrollArea className="h-full custom-scrollbar">
               <div className="space-y-3 pr-4">
                 {transactions.map((transaction) => (
                   <div key={transaction.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-200">
@@ -476,6 +497,23 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.5);
+        }
+      `}</style>
     </div>
   );
 };

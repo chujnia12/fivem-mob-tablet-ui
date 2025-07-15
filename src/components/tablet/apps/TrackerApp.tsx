@@ -21,7 +21,7 @@ interface Vehicle {
   value: number;
   difficulty: 'Łatwy' | 'Średni' | 'Trudny';
   timeLeft: number;
-  coordinates: { lat: number; lng: number };
+  area: string;
 }
 
 const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) => {
@@ -37,7 +37,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
       value: 85000,
       difficulty: 'Średni',
       timeLeft: 45,
-      coordinates: { lat: 52.2297, lng: 21.0122 }
+      area: 'Centrum miasta'
     },
     {
       id: '2',
@@ -46,7 +46,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
       value: 120000,
       difficulty: 'Trudny',
       timeLeft: 23,
-      coordinates: { lat: 52.2319, lng: 21.0067 }
+      area: 'Dzielnica finansowa'
     },
     {
       id: '3',
@@ -55,7 +55,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
       value: 45000,
       difficulty: 'Łatwy',
       timeLeft: 67,
-      coordinates: { lat: 52.2282, lng: 21.0158 }
+      area: 'Stare miasto'
     },
     {
       id: '4',
@@ -64,7 +64,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
       value: 95000,
       difficulty: 'Trudny',
       timeLeft: 12,
-      coordinates: { lat: 52.2356, lng: 21.0089 }
+      area: 'Dzielnica hotelowa'
     }
   ];
 
@@ -73,11 +73,15 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
   }, []);
 
   const handleTrackVehicle = (vehicle: Vehicle) => {
-    const price = 2.5; // Koszt śledzenia pojazdu
+    const price = 2.5; // Koszt namierzania pojazdu
     
     if (onPurchase(price)) {
       setTrackedVehicles(prev => [...prev, vehicle.id]);
       setSelectedVehicle(vehicle);
+      
+      // Symulacja wysłania SMS-a z obszarem pojazdu
+      console.log(`SMS wysłany: Pojazd ${vehicle.model} namierzony w obszarze: ${vehicle.area}`);
+      alert(`SMS wysłany na telefon!\nNamierzono pojazd: ${vehicle.model}\nObszar: ${vehicle.area}`);
     } else {
       alert('Niewystarczające środki!');
     }
@@ -158,7 +162,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
                 {trackedVehicles.includes(vehicle.id) && (
                   <div className="mt-2 flex items-center gap-1">
                     <Zap size={12} className="text-blue-400" />
-                    <span className="text-xs text-blue-400">Śledzony</span>
+                    <span className="text-xs text-blue-400">Namierzony</span>
                   </div>
                 )}
               </div>
@@ -205,10 +209,10 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
                 </div>
 
                 <div className="mb-6">
-                  <p className="text-xs text-white/60 mb-2">Lokalizacja GPS</p>
+                  <p className="text-xs text-white/60 mb-2">Obszar</p>
                   <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                     <p className="text-sm text-white/80">
-                      {selectedVehicle.coordinates.lat.toFixed(6)}, {selectedVehicle.coordinates.lng.toFixed(6)}
+                      {selectedVehicle.area}
                     </p>
                   </div>
                 </div>
@@ -224,16 +228,16 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
                       : 'bg-white/5 text-white/40 cursor-not-allowed border-white/10'
                   }`}
                 >
-                  {orgData.crypto_balance >= 2.5 ? 'Śledź pojazd (2.5 COIN)' : 'Niewystarczające środki'}
+                  {orgData.crypto_balance >= 2.5 ? 'Namierz pojazd (2.5 COIN)' : 'Niewystarczające środki'}
                 </button>
               ) : (
                 <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 text-center">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <Navigation size={20} className="text-green-400" />
-                    <span className="text-green-400 font-bold">Pojazd śledzony</span>
+                    <span className="text-green-400 font-bold">Pojazd namierzony</span>
                   </div>
                   <p className="text-sm text-white/70">
-                    Lokalizacja jest aktywnie monitorowana
+                    SMS z lokalizacją został wysłany
                   </p>
                 </div>
               )}
