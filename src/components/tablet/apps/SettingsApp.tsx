@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Shield, Users, DollarSign, Bell, Settings, Lock, Smartphone, Globe, Database, Key, Eye, UserCheck } from 'lucide-react';
+import { ArrowLeft, Shield, Users, DollarSign, Bell, Settings, Lock, Crown, User } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { ScrollArea } from '../../ui/scroll-area';
 
@@ -15,8 +15,11 @@ interface SettingsAppProps {
 
 const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
   const [selectedCategory, setSelectedCategory] = useState('permissions');
+  const [selectedRank, setSelectedRank] = useState('CZŁONEK');
 
-  // TODO: Fetch from orgmdt-uprawnienia table
+  // TODO: Fetch from orgmdt-uprawnienia table based on rank
+  const ranks = ['CZŁONEK', 'STARSZY CZŁONEK', 'ZASTĘPCA', 'SZEF'];
+  
   const permissions = [
     { id: 'manage_members', name: 'Zarządzanie członkami', enabled: true, description: 'Zatrudnianie i zwalnianie członków' },
     { id: 'manage_finance', name: 'Dostęp do finansów', enabled: false, description: 'Wpłaty i wypłaty z konta organizacji' },
@@ -52,6 +55,15 @@ const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
     { id: 'system', name: 'System', icon: Settings, color: 'text-gray-400' }
   ];
 
+  const getRankIcon = (rank: string) => {
+    switch (rank) {
+      case 'SZEF': return Crown;
+      case 'ZASTĘPCA': return Shield;
+      case 'STARSZY CZŁONEK': return Settings;
+      default: return User;
+    }
+  };
+
   const renderSettings = () => {
     switch (selectedCategory) {
       case 'permissions':
@@ -59,8 +71,40 @@ const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-6">
               <Shield className="text-red-400" size={24} />
-              <h2 className="text-xl font-medium">Uprawnienia Członków</h2>
+              <h2 className="text-xl font-medium">Uprawnienia dla Rang</h2>
             </div>
+            
+            {/* Rank Selection */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-6">
+              <h3 className="text-lg font-medium mb-4">Wybierz rangę do edycji:</h3>
+              <div className="flex gap-2 flex-wrap">
+                {ranks.map((rank) => {
+                  const RankIcon = getRankIcon(rank);
+                  return (
+                    <Button
+                      key={rank}
+                      size="sm"
+                      variant={selectedRank === rank ? "default" : "outline"}
+                      onClick={() => setSelectedRank(rank)}
+                      className={`${selectedRank === rank 
+                        ? 'bg-red-600 hover:bg-red-700 text-white' 
+                        : 'border-white/20 text-white/80 hover:bg-white/10 bg-transparent'} rounded-xl flex items-center gap-2`}
+                    >
+                      <RankIcon size={14} />
+                      {rank}
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-4">
+              <h3 className="text-lg font-medium mb-2">Uprawnienia dla: {selectedRank}</h3>
+              <p className="text-white/60 text-sm mb-4">
+                TODO: Sync with orgmdt-uprawnienia table for rank: {selectedRank}
+              </p>
+            </div>
+
             {permissions.map((permission) => (
               <div key={permission.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
                 <div className="flex items-center justify-between">
@@ -198,24 +242,28 @@ const SettingsApp: React.FC<SettingsAppProps> = ({ orgData, onHome }) => {
 
       <div className="flex h-[calc(100%-5rem)]">
         {/* Categories Sidebar */}
-        <div className="w-64 bg-white/5 backdrop-blur-sm border-r border-white/10 p-4">
-          <h3 className="text-sm font-medium text-white/60 mb-4 uppercase tracking-wider">Kategorie</h3>
-          <div className="space-y-2">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-200 ${
-                  selectedCategory === category.id
-                    ? 'bg-white/10 text-white border border-white/20'
-                    : 'text-white/70 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <category.icon size={18} className={category.color} />
-                <span className="font-medium">{category.name}</span>
-              </button>
-            ))}
-          </div>
+        <div className="w-64 bg-white/5 backdrop-blur-sm border-r border-white/10">
+          <ScrollArea className="h-full">
+            <div className="p-4">
+              <h3 className="text-sm font-medium text-white/60 mb-4 uppercase tracking-wider">Kategorie</h3>
+              <div className="space-y-2">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-200 ${
+                      selectedCategory === category.id
+                        ? 'bg-white/10 text-white border border-white/20'
+                        : 'text-white/70 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <category.icon size={18} className={category.color} />
+                    <span className="font-medium">{category.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </ScrollArea>
         </div>
 
         {/* Settings Content */}

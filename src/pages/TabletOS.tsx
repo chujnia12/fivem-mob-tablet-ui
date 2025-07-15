@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
@@ -7,8 +8,13 @@ import TransactionsApp from '../components/tablet/apps/TransactionsApp';
 import OrdersApp from '../components/tablet/apps/OrdersApp';
 import SettingsApp from '../components/tablet/apps/SettingsApp';
 import StatsApp from '../components/tablet/apps/StatsApp';
+import ZleceniaApp from '../components/tablet/apps/ZleceniaApp';
+import KryptowalutyApp from '../components/tablet/apps/KryptowalutyApp';
+import AppsApp from '../components/tablet/apps/AppsApp';
+import NapadyApp from '../components/tablet/apps/NapadyApp';
+import NotificationSystem from '../components/tablet/NotificationSystem';
 
-export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats';
+export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats' | 'zlecenia' | 'kryptowaluty' | 'apps' | 'napady';
 
 const TabletOS = () => {
   const [currentApp, setCurrentApp] = useState<AppType>('home');
@@ -45,6 +51,14 @@ const TabletOS = () => {
         return <SettingsApp orgData={orgData} onHome={goHome} />;
       case 'stats':
         return <StatsApp orgData={orgData} onHome={goHome} />;
+      case 'zlecenia':
+        return <ZleceniaApp orgData={orgData} onHome={goHome} />;
+      case 'kryptowaluty':
+        return <KryptowalutyApp orgData={orgData} onHome={goHome} />;
+      case 'apps':
+        return <AppsApp orgData={orgData} onHome={goHome} />;
+      case 'napady':
+        return <NapadyApp orgData={orgData} onHome={goHome} />;
       default:
         return <HomeScreen orgData={orgData} onOpenApp={openApp} />;
     }
@@ -83,6 +97,9 @@ const TabletOS = () => {
               </div>
             </div>
             
+            {/* Notification System */}
+            <NotificationSystem />
+            
             {/* App Content */}
             <div className="h-[calc(100%-3rem)]">
               {renderCurrentApp()}
@@ -90,13 +107,12 @@ const TabletOS = () => {
           </div>
         </div>
         
-        {/* Home Button - Improved iPad style */}
-        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
+        {/* Home Button - iPhone style bar */}
+        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
           <button
             onClick={goHome}
-            className="w-14 h-14 bg-gradient-to-br from-gray-200 to-white rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl transition-all duration-300 border-2 border-gray-300 hover:scale-105 active:scale-95"
+            className="w-32 h-1 bg-white/80 rounded-full hover:bg-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
           >
-            <div className="w-5 h-5 bg-gray-800 rounded-full shadow-inner"></div>
           </button>
         </div>
       </div>

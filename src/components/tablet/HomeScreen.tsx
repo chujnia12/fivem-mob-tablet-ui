@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   DollarSign, 
@@ -6,9 +7,10 @@ import {
   ShoppingBag, 
   Settings, 
   BarChart3,
-  Clock,
-  Battery,
-  Wifi
+  FileText,
+  Bitcoin,
+  Grid3X3,
+  Skull
 } from 'lucide-react';
 import { AppType } from '../../pages/TabletOS';
 
@@ -23,11 +25,6 @@ interface HomeScreenProps {
 }
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
-  const currentTime = new Date().toLocaleTimeString('pl-PL', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-
   // TODO: Fetch from jobs table to get rank name
   const getRankName = (rankNumber: number) => {
     const ranks = {
@@ -48,6 +45,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
     { id: 'transactions', name: 'Transakcje', icon: CreditCard, color: 'bg-purple-600' },
     { id: 'orders', name: 'Zamówienia', icon: ShoppingBag, color: 'bg-orange-600' },
     { id: 'stats', name: 'Statystyki', icon: BarChart3, color: 'bg-indigo-600' },
+    { id: 'zlecenia', name: 'Zlecenia', icon: FileText, color: 'bg-red-600' },
+    { id: 'kryptowaluty', name: 'Krypto', icon: Bitcoin, color: 'bg-yellow-600' },
+    { id: 'napady', name: 'Napady', icon: Skull, color: 'bg-pink-600' },
+    { id: 'apps', name: 'Apps', icon: Grid3X3, color: 'bg-cyan-600' },
     { id: 'settings', name: 'Ustawienia', icon: Settings, color: 'bg-gray-600' },
   ];
 
@@ -58,7 +59,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
       
       {/* Apps Grid - iPad style */}
       <div className="relative z-10 p-12 h-full flex flex-col justify-center">
-        <div className="grid grid-cols-4 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-5 gap-8 max-w-5xl mx-auto">
           {apps.map((app) => (
             <button
               key={app.id}

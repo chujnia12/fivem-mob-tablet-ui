@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Search, Users, UserPlus, Settings, Shield, Crown, User, MoreVertical, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, Search, Users, UserPlus, Settings, Shield, Crown, User, MoreVertical, Phone, Mail, Copy } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 interface MembersAppProps {
   orgData: {
@@ -15,6 +16,7 @@ interface MembersAppProps {
 const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const { toast } = useToast();
 
   // TODO: Fetch from database - users table joined with jobs table
   const members = [
@@ -116,6 +118,14 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
       case 'STARSZY CZŁONEK': return Settings;
       default: return User;
     }
+  };
+
+  const copyPhoneNumber = (phone: string) => {
+    navigator.clipboard.writeText(phone);
+    toast({
+      title: "Skopiowano",
+      description: `Numer telefonu ${phone} został skopiowany`,
+    });
   };
 
   return (
@@ -221,15 +231,19 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2 text-sm">
                         <Phone size={14} className="text-white/60" />
-                        <span className="text-white/80">{member.phone}</span>
+                        <span className="text-white/80 flex-1">{member.phone}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyPhoneNumber(member.phone)}
+                          className="p-1 h-auto text-white/60 hover:bg-white/10 rounded"
+                        >
+                          <Copy size={12} />
+                        </Button>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Mail size={14} className="text-white/60" />
                         <span className="text-white/80">{member.email}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs">
-                        <span className="text-white/60">Pensja:</span>
-                        <span className="text-green-400 font-medium">${member.salary.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-white/60">Ostatnio:</span>
@@ -245,41 +259,38 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
 
         {/* Statistics Panel */}
         <div className="w-80 bg-white/5 backdrop-blur-sm border-l border-white/10 p-6 space-y-6">
-          <h3 className="text-lg font-medium mb-4">Statystyki</h3>
-          
-          <div className="space-y-4">
-            <div className="bg-white/5 rounded-xl p-4">
-              <div className="text-2xl font-bold text-white mb-1">{members.length}</div>
-              <div className="text-white/60 text-sm">Łączna liczba członków</div>
-            </div>
-
-            <div className="bg-white/5 rounded-xl p-4">
-              <div className="text-2xl font-bold text-green-400 mb-1">
-                {members.filter(m => m.status === 'online').length}
-              </div>
-              <div className="text-white/60 text-sm">Online teraz</div>
-            </div>
-
-            <div className="bg-white/5 rounded-xl p-4">
-              <div className="text-2xl font-bold text-blue-400 mb-1">
-                ${members.reduce((sum, m) => sum + m.salary, 0).toLocaleString()}
-              </div>
-              <div className="text-white/60 text-sm">Miesięczne koszty pensji</div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <h4 className="font-medium">Rangi</h4>
-            {['SZEF', 'ZASTĘPCA', 'STARSZY CZŁONEK', 'CZŁONEK'].map((rank) => {
-              const count = members.filter(m => m.rank === rank).length;
-              return (
-                <div key={rank} className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
-                  <span className="text-sm">{rank}</span>
-                  <span className="text-white/80 font-medium">{count}</span>
+          <ScrollArea className="h-full">
+            <div className="space-y-6">
+              <h3 className="text-lg font-medium mb-4">Statystyki</h3>
+              
+              <div className="space-y-4">
+                <div className="bg-white/5 rounded-xl p-4">
+                  <div className="text-2xl font-bold text-white mb-1">{members.length}</div>
+                  <div className="text-white/60 text-sm">Łączna liczba członków</div>
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="bg-white/5 rounded-xl p-4">
+                  <div className="text-2xl font-bold text-green-400 mb-1">
+                    {members.filter(m => m.status === 'online').length}
+                  </div>
+                  <div className="text-white/60 text-sm">Online teraz</div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-medium">Rangi</h4>
+                {['SZEF', 'ZASTĘPCA', 'STARSZY CZŁONEK', 'CZŁONEK'].map((rank) => {
+                  const count = members.filter(m => m.rank === rank).length;
+                  return (
+                    <div key={rank} className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
+                      <span className="text-sm">{rank}</span>
+                      <span className="text-white/80 font-medium">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </ScrollArea>
         </div>
       </div>
     </div>
