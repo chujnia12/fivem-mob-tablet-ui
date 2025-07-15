@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Download, Star, Bitcoin, Check, ShoppingCart, Loader } from 'lucide-react';
+import { ArrowLeft, Download, Star, Bitcoin, Check, ShoppingCart, Loader, Play } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { ScrollArea } from '../../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -20,19 +20,19 @@ interface AppsAppProps {
   };
   onHome: () => void;
   onPurchase: (app: string, price: number) => boolean;
+  onInstall: (app: string) => void;
   installedApps: string[];
+  purchasedApps: string[];
 }
 
-const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installedApps }) => {
+const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, onInstall, installedApps, purchasedApps }) => {
   const { toast } = useToast();
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [selectedApp, setSelectedApp] = useState<any>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  // Fikcyjne kryptowaluty z GTA 5
   const userCrypto = orgData.crypto_balance || 15.75;
 
-  // TODO: Fetch from database - available_apps table
   const availableApps = [
     {
       id: 'zlecenia',
@@ -78,8 +78,27 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installe
       return;
     }
 
+    if (purchasedApps.includes(app.id)) {
+      // Already purchased, start download
+      handleDownload(app);
+      return;
+    }
+
     setSelectedApp(app);
     setShowPurchaseDialog(true);
+  };
+
+  const handleDownload = (app: typeof availableApps[0]) => {
+    setDownloading(app.id);
+    
+    setTimeout(() => {
+      setDownloading(null);
+      onInstall(app.id);
+      toast({
+        title: "Aplikacja zainstalowana",
+        description: `${app.name} została pomyślnie zainstalowana`,
+      });
+    }, 3000);
   };
 
   const confirmPurchase = async () => {
@@ -89,17 +108,10 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installe
     
     if (success) {
       setShowPurchaseDialog(false);
-      setDownloading(selectedApp.id);
-      
-      // Simulate download process
-      setTimeout(() => {
-        setDownloading(null);
-        toast({
-          title: "Aplikacja zainstalowana",
-          description: `${selectedApp.name} została pomyślnie zainstalowana`,
-        });
-      }, 3000);
-      
+      toast({
+        title: "Aplikacja zakupiona",
+        description: `${selectedApp.name} została zakupiona. Możesz teraz ją pobrać.`,
+      });
       setSelectedApp(null);
     } else {
       toast({
@@ -107,6 +119,31 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installe
         description: `Potrzebujesz ${selectedApp.price} VCASH aby kupić ${selectedApp.name}`,
         variant: "destructive",
       });
+    }
+  };
+
+  const getAppStatus = (app: typeof availableApps[0]) => {
+    if (installedApps.includes(app.id)) return 'installed';
+    if (downloading === app.id) return 'downloading';
+    if (purchasedApps.includes(app.id)) return 'purchased';
+    return 'available';
+  };
+
+  const getButtonText = (status: string) => {
+    switch (status) {
+      case 'installed': return 'ZAINSTALOWANE';
+      case 'downloading': return 'POBIERANIE...';
+      case 'purchased': return 'POBIERZ';
+      default: return 'KUP TERAZ';
+    }
+  };
+
+  const getButtonIcon = (status: string) => {
+    switch (status) {
+      case 'installed': return Check;
+      case 'downloading': return Loader;
+      case 'purchased': return Download;
+      default: return ShoppingCart;
     }
   };
 
@@ -119,7 +156,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installe
             variant="ghost"
             size="icon"
             onClick={onHome}
-            className="text-white hover:bg-white/10 rounded-full"
+            className="text-white hover:bg-white/10 rounded-full bg-black/40 backdrop-blur-md border border-white/20"
           >
             <ArrowLeft size={20} />
           </Button>
@@ -141,12 +178,11 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installe
       </div>
 
       <div className="p-6 space-y-6 h-[calc(100%-5rem)]">
-        {/* Apps Grid */}
         <ScrollArea className="h-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pr-4">
             {availableApps.map((app) => {
-              const isInstalled = installedApps.includes(app.id);
-              const isDownloading = downloading === app.id;
+              const status = getAppStatus(app);
+              const ButtonIcon = getButtonIcon(status);
               
               return (
                 <div key={app.id} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 rounded-3xl p-8 transition-all duration-300 shadow-lg">
@@ -159,13 +195,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installe
                         className="w-20 h-20 rounded-2xl object-cover shadow-lg"
                       />
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                        {isDownloading ? (
-                          <Loader size={12} className="text-white animate-spin" />
-                        ) : isInstalled ? (
-                          <Check size={12} className="text-white" />
-                        ) : (
-                          <ShoppingCart size={12} className="text-white" />
-                        )}
+                        <ButtonIcon size={12} className={`text-white ${status === 'downloading' ? 'animate-spin' : ''}`} />
                       </div>
                     </div>
 
@@ -198,36 +228,41 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installe
 
                     {/* Price and Purchase */}
                     <div className="w-full space-y-4">
-                      <div className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Bitcoin size={20} className="text-yellow-400" />
-                          <span className="text-2xl font-bold text-yellow-400">{app.price}</span>
-                          <span className="text-sm text-yellow-400/80">VCASH</span>
+                      {status !== 'installed' && status !== 'purchased' && (
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <Bitcoin size={20} className="text-yellow-400" />
+                            <span className="text-2xl font-bold text-yellow-400">{app.price}</span>
+                            <span className="text-sm text-yellow-400/80">VCASH</span>
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       <Button
-                        onClick={() => handlePurchase(app)}
-                        disabled={isInstalled || isDownloading}
+                        onClick={() => status === 'purchased' ? handleDownload(app) : handlePurchase(app)}
+                        disabled={status === 'installed' || status === 'downloading'}
                         className={`w-full rounded-2xl font-bold py-6 text-lg transition-all duration-300 ${
-                          isInstalled 
+                          status === 'installed'
                             ? 'bg-green-600/50 hover:bg-green-600/70 text-green-200 cursor-not-allowed border border-green-500/30'
-                            : isDownloading
+                            : status === 'downloading'
                             ? 'bg-blue-600/50 hover:bg-blue-600/70 text-blue-200 cursor-not-allowed border border-blue-500/30'
+                            : status === 'purchased'
+                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg border border-green-500/30'
                             : userCrypto < app.price
                             ? 'bg-gray-600/50 hover:bg-gray-600/70 text-gray-300 cursor-not-allowed border border-gray-500/30'
                             : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg border border-cyan-500/30'
                         }`}
                       >
-                        {isDownloading ? (
+                        {status === 'downloading' ? (
                           <div className="flex items-center gap-2">
                             <Loader size={20} className="animate-spin" />
-                            POBIERANIE...
+                            {getButtonText(status)}
                           </div>
-                        ) : isInstalled ? (
-                          'ZAINSTALOWANE'
                         ) : (
-                          'KUP TERAZ'
+                          <div className="flex items-center gap-2">
+                            <ButtonIcon size={20} />
+                            {getButtonText(status)}
+                          </div>
                         )}
                       </Button>
                     </div>
@@ -293,7 +328,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installe
             <Button
               variant="outline"
               onClick={() => setShowPurchaseDialog(false)}
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-white/20 text-white hover:bg-white/10 bg-black/40 backdrop-blur-md"
             >
               Anuluj
             </Button>

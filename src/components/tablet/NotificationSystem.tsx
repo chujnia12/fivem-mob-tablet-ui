@@ -56,30 +56,52 @@ const NotificationSystem = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Create iPhone-like bell sound
-      const createBellTone = (frequency: number, startTime: number, duration: number) => {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
+      // Create iPhone-like bell sound with multiple harmonics
+      const createComplexBellTone = () => {
+        const now = audioContext.currentTime;
         
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        // Main bell tone
+        const osc1 = audioContext.createOscillator();
+        const gain1 = audioContext.createGain();
+        osc1.connect(gain1);
+        gain1.connect(audioContext.destination);
+        osc1.frequency.setValueAtTime(800, now);
+        osc1.type = 'sine';
+        gain1.gain.setValueAtTime(0, now);
+        gain1.gain.linearRampToValueAtTime(0.3, now + 0.01);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
         
-        oscillator.frequency.setValueAtTime(frequency, startTime);
-        oscillator.type = 'sine';
+        // Higher harmonic
+        const osc2 = audioContext.createOscillator();
+        const gain2 = audioContext.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioContext.destination);
+        osc2.frequency.setValueAtTime(1200, now);
+        osc2.type = 'sine';
+        gain2.gain.setValueAtTime(0, now);
+        gain2.gain.linearRampToValueAtTime(0.15, now + 0.01);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
         
-        gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        // Second chime
+        const osc3 = audioContext.createOscillator();
+        const gain3 = audioContext.createGain();
+        osc3.connect(gain3);
+        gain3.connect(audioContext.destination);
+        osc3.frequency.setValueAtTime(1000, now + 0.15);
+        osc3.type = 'sine';
+        gain3.gain.setValueAtTime(0, now + 0.15);
+        gain3.gain.linearRampToValueAtTime(0.2, now + 0.16);
+        gain3.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
         
-        oscillator.start(startTime);
-        oscillator.stop(startTime + duration);
+        osc1.start(now);
+        osc1.stop(now + 0.4);
+        osc2.start(now);
+        osc2.stop(now + 0.3);
+        osc3.start(now + 0.15);
+        osc3.stop(now + 0.5);
       };
       
-      const now = audioContext.currentTime;
-      // Bell-like sound pattern
-      createBellTone(800, now, 0.1);
-      createBellTone(1000, now + 0.1, 0.1);
-      createBellTone(800, now + 0.2, 0.1);
+      createComplexBellTone();
       
     } catch (e) {
       console.log('Audio not supported');
@@ -89,7 +111,7 @@ const NotificationSystem = () => {
   // Symulacja nowych powiadomień
   useEffect(() => {
     const interval = setInterval(() => {
-      if (Math.random() > 0.8) { // 20% szansy co 10 sekund
+      if (Math.random() > 0.8) {
         const newNotification: Notification = {
           id: Date.now().toString(),
           type: ['success', 'info', 'warning'][Math.floor(Math.random() * 3)] as any,
@@ -106,7 +128,6 @@ const NotificationSystem = () => {
 
         setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
         
-        // Pokaż toast dla ważnych powiadomień
         if (newNotification.type === 'success' || newNotification.type === 'error') {
           toast({
             title: newNotification.title,
@@ -114,7 +135,6 @@ const NotificationSystem = () => {
             variant: newNotification.type === 'error' ? 'destructive' : 'default',
           });
           
-          // Play iPhone-style bell sound
           playNotificationSound();
         }
       }
@@ -172,7 +192,7 @@ const NotificationSystem = () => {
       {/* Small Notification Bell */}
       <button
         onClick={() => setShowNotifications(!showNotifications)}
-        className="relative p-1 hover:bg-white/10 rounded transition-all duration-200"
+        className="relative p-1 hover:bg-white/10 rounded transition-all duration-200 text-white"
       >
         <Bell size={16} className="text-white/80" />
         {unreadCount > 0 && (
@@ -182,9 +202,9 @@ const NotificationSystem = () => {
         )}
       </button>
 
-      {/* Notifications Panel - Positioned within tablet bounds */}
+      {/* Notifications Panel - High z-index to be above everything */}
       {showNotifications && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-black/95 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-50 max-h-96">
+        <div className="fixed top-16 right-6 w-80 bg-black/95 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-[9999] max-h-96">
           <div className="p-3 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
             <div className="flex items-center justify-between">
               <h3 className="text-white font-medium text-sm">Powiadomienia</h3>
@@ -200,7 +220,7 @@ const NotificationSystem = () => {
             )}
           </div>
           
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-white/20 hover:scrollbar-thumb-white/30">
             {notifications.length === 0 ? (
               <div className="p-6 text-center text-white/60">
                 <Bell size={24} className="mx-auto mb-2 opacity-50" />
