@@ -21,13 +21,14 @@ interface Vehicle {
   value: number;
   difficulty: 'Łatwy' | 'Średni' | 'Trudny';
   timeLeft: number;
-  coordinates: { lat: number; lng: number };
+  area: string;
 }
 
 const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [trackedVehicles, setTrackedVehicles] = useState<string[]>([]);
+  const [showMap, setShowMap] = useState(false);
 
   const availableVehicles: Vehicle[] = [
     {
@@ -37,7 +38,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
       value: 85000,
       difficulty: 'Średni',
       timeLeft: 45,
-      coordinates: { lat: 52.2297, lng: 21.0122 }
+      area: 'Okolice centrum handlowego'
     },
     {
       id: '2',
@@ -46,7 +47,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
       value: 120000,
       difficulty: 'Trudny',
       timeLeft: 23,
-      coordinates: { lat: 52.2319, lng: 21.0067 }
+      area: 'Dzielnica finansowa - parking biurowca'
     },
     {
       id: '3',
@@ -55,7 +56,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
       value: 45000,
       difficulty: 'Łatwy',
       timeLeft: 67,
-      coordinates: { lat: 52.2282, lng: 21.0158 }
+      area: 'Strefa gastronomiczna - ul. Główna'
     },
     {
       id: '4',
@@ -64,7 +65,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
       value: 95000,
       difficulty: 'Trudny',
       timeLeft: 12,
-      coordinates: { lat: 52.2356, lng: 21.0089 }
+      area: 'Dzielnica hotelowa - parking VIP'
     }
   ];
 
@@ -73,11 +74,12 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
   }, []);
 
   const handleTrackVehicle = (vehicle: Vehicle) => {
-    const price = 2.5; // Koszt śledzenia pojazdu
+    const price = 2.5;
     
     if (onPurchase(price)) {
       setTrackedVehicles(prev => [...prev, vehicle.id]);
       setSelectedVehicle(vehicle);
+      setShowMap(true);
     } else {
       alert('Niewystarczające środki!');
     }
@@ -158,7 +160,7 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
                 {trackedVehicles.includes(vehicle.id) && (
                   <div className="mt-2 flex items-center gap-1">
                     <Zap size={12} className="text-blue-400" />
-                    <span className="text-xs text-blue-400">Śledzony</span>
+                    <span className="text-xs text-blue-400">Namierzony</span>
                   </div>
                 )}
               </div>
@@ -166,76 +168,119 @@ const TrackerApp: React.FC<TrackerAppProps> = ({ orgData, onHome, onPurchase }) 
           </div>
         </div>
 
-        {/* Szczegóły pojazdu */}
+        {/* Szczegóły pojazdu / Mapa */}
         <div className="w-1/2 p-6">
           {selectedVehicle ? (
             <div className="h-full flex flex-col">
-              <h2 className="text-lg font-bold text-white mb-4">Szczegóły pojazdu</h2>
-              
-              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                    <Car size={24} className="text-blue-400" />
+              {showMap && trackedVehicles.includes(selectedVehicle.id) ? (
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Lokalizacja pojazdu</h2>
+                    <button
+                      onClick={() => setShowMap(false)}
+                      className="text-white/60 hover:text-white text-sm"
+                    >
+                      Pokaż szczegóły
+                    </button>
                   </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">{selectedVehicle.model}</h3>
-                    <p className="text-sm text-white/70">{selectedVehicle.location}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-xs text-white/60 mb-1">Wartość</p>
-                    <p className="text-lg font-bold text-green-400">{selectedVehicle.value.toLocaleString()} PLN</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-white/60 mb-1">Trudność</p>
-                    <p className={`text-lg font-bold ${getDifficultyColor(selectedVehicle.difficulty)}`}>
-                      {selectedVehicle.difficulty}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <p className="text-xs text-white/60 mb-1">Pozostały czas</p>
-                  <div className="flex items-center gap-2">
-                    <Clock size={16} className="text-orange-400" />
-                    <p className="text-lg font-bold text-orange-400">{selectedVehicle.timeLeft} minut</p>
+                  
+                  {/* Mapa placeholder */}
+                  <div className="flex-1 bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 flex flex-col items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-green-900/20 to-blue-900/20 rounded-lg border border-green-500/20 relative overflow-hidden">
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.1),transparent_70%)]"></div>
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <div className="w-8 h-8 bg-red-500 rounded-full animate-pulse flex items-center justify-center">
+                          <Car size={16} className="text-white" />
+                        </div>
+                      </div>
+                      <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg p-3">
+                        <div className="text-white text-sm font-bold">{selectedVehicle.model}</div>
+                        <div className="text-white/70 text-xs">{selectedVehicle.area}</div>
+                      </div>
+                      <div className="absolute top-4 right-4 bg-green-500/20 backdrop-blur-sm rounded-lg p-2 border border-green-500/30">
+                        <div className="text-green-400 text-xs font-bold">AKTYWNY</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                <div className="mb-6">
-                  <p className="text-xs text-white/60 mb-2">Lokalizacja GPS</p>
-                  <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                    <p className="text-sm text-white/80">
-                      {selectedVehicle.coordinates.lat.toFixed(6)}, {selectedVehicle.coordinates.lng.toFixed(6)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {!trackedVehicles.includes(selectedVehicle.id) ? (
-                <button
-                  onClick={() => handleTrackVehicle(selectedVehicle)}
-                  disabled={orgData.crypto_balance < 2.5}
-                  className={`w-full py-3 rounded-xl transition-colors font-medium backdrop-blur-sm border ${
-                    orgData.crypto_balance >= 2.5
-                      ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border-orange-500/30'
-                      : 'bg-white/5 text-white/40 cursor-not-allowed border-white/10'
-                  }`}
-                >
-                  {orgData.crypto_balance >= 2.5 ? 'Śledź pojazd (2.5 COIN)' : 'Niewystarczające środki'}
-                </button>
               ) : (
-                <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-2">
-                    <Navigation size={20} className="text-green-400" />
-                    <span className="text-green-400 font-bold">Pojazd śledzony</span>
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold text-white">Szczegóły pojazdu</h2>
+                    {trackedVehicles.includes(selectedVehicle.id) && (
+                      <button
+                        onClick={() => setShowMap(true)}
+                        className="text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        Pokaż mapę
+                      </button>
+                    )}
                   </div>
-                  <p className="text-sm text-white/70">
-                    Lokalizacja jest aktywnie monitorowana
-                  </p>
-                </div>
+                  
+                  <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 mb-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                        <Car size={24} className="text-blue-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">{selectedVehicle.model}</h3>
+                        <p className="text-sm text-white/70">{selectedVehicle.location}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-xs text-white/60 mb-1">Wartość</p>
+                        <p className="text-lg font-bold text-green-400">{selectedVehicle.value.toLocaleString()} PLN</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-white/60 mb-1">Trudność</p>
+                        <p className={`text-lg font-bold ${getDifficultyColor(selectedVehicle.difficulty)}`}>
+                          {selectedVehicle.difficulty}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-xs text-white/60 mb-1">Pozostały czas</p>
+                      <div className="flex items-center gap-2">
+                        <Clock size={16} className="text-orange-400" />
+                        <p className="text-lg font-bold text-orange-400">{selectedVehicle.timeLeft} minut</p>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <p className="text-xs text-white/60 mb-2">Obszar poszukiwań</p>
+                      <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                        <p className="text-sm text-white/80">{selectedVehicle.area}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!trackedVehicles.includes(selectedVehicle.id) ? (
+                    <button
+                      onClick={() => handleTrackVehicle(selectedVehicle)}
+                      disabled={orgData.crypto_balance < 2.5}
+                      className={`w-full py-3 rounded-xl transition-colors font-medium backdrop-blur-sm border ${
+                        orgData.crypto_balance >= 2.5
+                          ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border-orange-500/30'
+                          : 'bg-white/5 text-white/40 cursor-not-allowed border-white/10'
+                      }`}
+                    >
+                      {orgData.crypto_balance >= 2.5 ? 'Namierz pojazd (2.5 COIN)' : 'Niewystarczające środki'}
+                    </button>
+                  ) : (
+                    <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Navigation size={20} className="text-green-400" />
+                        <span className="text-green-400 font-bold">Pojazd namierzony</span>
+                      </div>
+                      <p className="text-sm text-white/70">
+                        Lokalizacja jest aktywnie monitorowana
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           ) : (
