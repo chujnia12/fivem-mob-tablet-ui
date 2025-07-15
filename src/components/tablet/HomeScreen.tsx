@@ -11,7 +11,8 @@ import {
   Bitcoin, 
   Crosshair, 
   ShoppingBag,
-  StickyNote
+  StickyNote,
+  MapPin
 } from 'lucide-react';
 import { AppType } from '../../pages/TabletOS';
 import {
@@ -101,6 +102,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp, installedAp
       name: 'Napady',
       icon: Crosshair,
       isDefault: false
+    },
+    {
+      id: 'tracker' as AppType,
+      name: 'Tracker',
+      icon: MapPin,
+      isDefault: false
     }
   ];
 
@@ -123,18 +130,18 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp, installedAp
         </div>
       </div>
 
-      {/* App Grid */}
-      <div className="relative z-10 h-full">
-        <div className="grid grid-cols-4 gap-8 justify-items-center items-start pt-16">
+      {/* App Grid - Poprawiona siatka */}
+      <div className="relative z-10 h-full flex items-center justify-center">
+        <div className="grid grid-cols-6 gap-6 max-w-4xl mx-auto">
           {availableApps.map((app) => (
             <div key={app.id} className="flex flex-col items-center group">
               <ContextMenu>
                 <ContextMenuTrigger>
                   <button
                     onClick={() => onOpenApp(app.id)}
-                    className="w-20 h-20 mb-3 rounded-2xl bg-white/5 backdrop-blur-sm shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center justify-center border border-white/10 hover:border-white/20 hover:bg-white/10"
+                    className="w-16 h-16 mb-2 rounded-xl bg-white/5 backdrop-blur-sm shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center justify-center border border-white/10 hover:border-white/20 hover:bg-white/10"
                   >
-                    <app.icon size={32} className="text-white" />
+                    <app.icon size={28} className="text-white" />
                   </button>
                 </ContextMenuTrigger>
                 {!app.isDefault && (
@@ -148,7 +155,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp, installedAp
                   </ContextMenuContent>
                 )}
               </ContextMenu>
-              <span className="text-white text-sm text-center font-medium group-hover:text-blue-400 transition-colors duration-200">
+              <span className="text-white text-xs text-center font-medium group-hover:text-blue-400 transition-colors duration-200 max-w-16 truncate">
                 {app.name}
               </span>
             </div>

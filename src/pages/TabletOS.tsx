@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
@@ -13,10 +12,11 @@ import KryptowalutyApp from '../components/tablet/apps/KryptowalutyApp';
 import AppsApp from '../components/tablet/apps/AppsApp';
 import NapadyApp from '../components/tablet/apps/NapadyApp';
 import NotesApp from '../components/tablet/apps/NotesApp';
+import TrackerApp from '../components/tablet/apps/TrackerApp';
 import NotificationSystem from '../components/tablet/NotificationSystem';
 import { WifiHigh } from 'lucide-react';
 
-export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats' | 'zlecenia' | 'kryptowaluty' | 'apps' | 'napady' | 'notes';
+export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats' | 'zlecenia' | 'kryptowaluty' | 'apps' | 'napady' | 'notes' | 'tracker';
 
 const TabletOS = () => {
   const [currentApp, setCurrentApp] = useState<AppType>('home');
@@ -79,6 +79,17 @@ const TabletOS = () => {
     return false;
   };
 
+  const purchaseTracker = (price: number) => {
+    if (orgData.crypto_balance >= price) {
+      setOrgData(prev => ({
+        ...prev,
+        crypto_balance: prev.crypto_balance - price
+      }));
+      return true;
+    }
+    return false;
+  };
+
   const getRankName = (rankNumber: number) => {
     const ranks = {
       1: 'CZŁONEK',
@@ -116,6 +127,8 @@ const TabletOS = () => {
         return <AppsApp orgData={orgData} onHome={goHome} onPurchase={purchaseApp} onInstall={installApp} onOpenApp={openApp} installedApps={installedApps} purchasedApps={purchasedApps} />;
       case 'napady':
         return installedApps.includes('napady') ? <NapadyApp orgData={orgData} onHome={goHome} /> : <div>App not installed</div>;
+      case 'tracker':
+        return installedApps.includes('tracker') ? <TrackerApp orgData={orgData} onHome={goHome} onPurchase={purchaseTracker} /> : <div>App not installed</div>;
       default:
         return <HomeScreen orgData={orgData} onOpenApp={openApp} installedApps={installedApps} onUninstallApp={uninstallApp} />;
     }

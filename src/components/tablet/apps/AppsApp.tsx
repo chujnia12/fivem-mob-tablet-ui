@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   ArrowLeft, 
@@ -13,7 +12,8 @@ import {
   Star,
   Users,
   Wifi,
-  Play
+  Play,
+  MapPin
 } from 'lucide-react';
 import { AppType } from '../../../pages/TabletOS';
 
@@ -52,10 +52,10 @@ const AppsApp: React.FC<AppsAppProps> = ({
       description: 'Zarządzaj zleceniami organizacji',
       icon: Briefcase,
       price: 2.5,
-      color: 'from-red-500 to-red-600',
       category: 'Biznes',
       rating: 4.8,
-      size: '12.5 MB'
+      size: '12.5 MB',
+      screenshots: 3
     },
     {
       id: 'kryptowaluty' as AppType,
@@ -63,10 +63,10 @@ const AppsApp: React.FC<AppsAppProps> = ({
       description: 'Handel kryptowalutami',
       icon: Bitcoin,
       price: 3.2,
-      color: 'from-yellow-500 to-yellow-600',
       category: 'Finanse',
       rating: 4.6,
-      size: '8.2 MB'
+      size: '8.2 MB',
+      screenshots: 4
     },
     {
       id: 'napady' as AppType,
@@ -74,10 +74,21 @@ const AppsApp: React.FC<AppsAppProps> = ({
       description: 'Planowanie i wykonywanie napadów',
       icon: Crosshair,
       price: 4.8,
-      color: 'from-pink-500 to-pink-600',
       category: 'Akcja',
       rating: 4.9,
-      size: '15.7 MB'
+      size: '15.7 MB',
+      screenshots: 5
+    },
+    {
+      id: 'tracker' as AppType,
+      name: 'Tracker',
+      description: 'Śledź lokalizacje pojazdów do kradzieży',
+      icon: MapPin,
+      price: 6.5,
+      category: 'Narzędzia',
+      rating: 4.7,
+      size: '11.3 MB',
+      screenshots: 4
     },
   ];
 
@@ -123,10 +134,9 @@ const AppsApp: React.FC<AppsAppProps> = ({
         return (
           <button
             onClick={() => onOpenApp(app.id)}
-            className="flex items-center justify-center w-20 h-8 bg-blue-600/80 hover:bg-blue-600 rounded-full transition-colors border border-blue-500/30"
+            className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition-colors border border-blue-500/30 text-blue-400 text-sm font-medium backdrop-blur-sm"
           >
-            <Play size={14} className="text-white mr-1" />
-            <span className="text-xs font-medium text-white">Otwórz</span>
+            Otwórz
           </button>
         );
       
@@ -134,30 +144,24 @@ const AppsApp: React.FC<AppsAppProps> = ({
         return (
           <button
             onClick={() => handleDownload(app.id)}
-            className="flex items-center justify-center w-20 h-8 bg-blue-600/80 hover:bg-blue-600 rounded-full transition-colors border border-blue-500/30"
+            className="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 rounded-lg transition-colors border border-green-500/30 text-green-400 text-sm font-medium backdrop-blur-sm"
           >
-            <Download size={14} className="text-white mr-1" />
-            <span className="text-xs font-medium text-white">Pobierz</span>
+            Pobierz
           </button>
         );
       
       case 'downloading':
         return (
-          <div className="flex flex-col items-center justify-center w-20 h-12">
-            <div className="flex items-center justify-center w-20 h-8 bg-white/10 rounded-full border border-white/20 mb-1">
-              <div className="relative">
-                <Loader size={14} className="animate-spin text-blue-400 mr-1" />
-                <div className="absolute inset-0 animate-pulse bg-blue-400/20 rounded-full"></div>
-              </div>
-              <span className="text-xs font-medium text-white/90">{progress}%</span>
+          <div className="flex flex-col items-center justify-center">
+            <div className="flex items-center justify-center px-4 py-2 bg-white/5 rounded-lg border border-white/20 mb-2">
+              <Loader size={16} className="animate-spin text-blue-400 mr-2" />
+              <span className="text-sm font-medium text-white/90">{progress}%</span>
             </div>
-            <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
+            <div className="w-24 h-1 bg-white/10 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-300 ease-out relative"
+                className="h-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
-              >
-                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-              </div>
+              />
             </div>
           </div>
         );
@@ -167,15 +171,13 @@ const AppsApp: React.FC<AppsAppProps> = ({
           <button
             onClick={() => handlePurchase(app.id, app.price)}
             disabled={orgData.crypto_balance < app.price}
-            className={`flex items-center justify-center w-20 h-8 rounded-full transition-colors border ${
+            className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium backdrop-blur-sm border ${
               orgData.crypto_balance >= app.price
-                ? 'bg-blue-600/80 hover:bg-blue-600 text-white border-blue-500/30'
+                ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border-orange-500/30'
                 : 'bg-white/5 text-white/40 cursor-not-allowed border-white/10'
             }`}
           >
-            <span className="text-xs font-medium">
-              {orgData.crypto_balance >= app.price ? `${app.price} COIN` : 'Brak środków'}
-            </span>
+            {orgData.crypto_balance >= app.price ? `${app.price} COIN` : 'Brak środków'}
           </button>
         );
     }
@@ -184,7 +186,7 @@ const AppsApp: React.FC<AppsAppProps> = ({
   return (
     <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black text-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-white/10 px-6 py-4">
+      <div className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-white/10 px-6 py-3">
         <div className="flex items-center gap-4">
           <button
             onClick={onHome}
@@ -193,9 +195,10 @@ const AppsApp: React.FC<AppsAppProps> = ({
             <ArrowLeft size={20} className="text-blue-400" />
           </button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-white">App Store</h1>
+            <h1 className="text-xl font-bold text-white">App Store</h1>
+            <p className="text-xs text-white/60">Odkryj i pobierz aplikacje</p>
           </div>
-          <div className="bg-white/5 rounded-xl px-4 py-2 border border-white/10">
+          <div className="bg-white/5 rounded-xl px-4 py-2 border border-white/10 backdrop-blur-sm">
             <div className="text-center">
               <p className="text-xs text-white/60">Saldo</p>
               <p className="text-sm font-bold text-orange-400">{orgData.crypto_balance.toFixed(2)} COIN</p>
@@ -204,69 +207,51 @@ const AppsApp: React.FC<AppsAppProps> = ({
         </div>
       </div>
 
-      {/* Featured Section */}
-      <div className="px-6 py-6 bg-gradient-to-r from-blue-900/20 to-purple-900/20 border-b border-white/5">
-        <h2 className="text-xl font-bold text-white mb-4">Polecane</h2>
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/10">
-          <div className="flex items-center gap-6">
-            <div className={`w-20 h-20 bg-gradient-to-br ${availableApps[2].color} rounded-3xl flex items-center justify-center shadow-2xl`}>
-              <Crosshair size={32} className="text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-white mb-2">Napady</h3>
-              <p className="text-white/70 mb-3">Planowanie i wykonywanie napadów</p>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center">
-                  <Star size={14} className="text-yellow-400 fill-current" />
-                  <span className="text-sm text-white/80 ml-1">4.9</span>
-                </div>
-                <span className="text-white/40">•</span>
-                <span className="text-sm text-white/80">Akcja</span>
-                <span className="text-white/40">•</span>
-                <span className="text-sm text-white/80">15.7 MB</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xl font-bold text-blue-400 mb-3">4.8 COIN</p>
-              {renderActionButton(availableApps[2])}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Apps List */}
+      {/* Apps Grid */}
       <div className="flex-1 px-6 py-6 overflow-y-auto custom-scrollbar">
-        <h2 className="text-xl font-bold text-white mb-6">Wszystkie aplikacje</h2>
-        <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
           {availableApps.map((app) => (
             <div
               key={app.id}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200 hover:border-white/20"
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-200 hover:border-white/20"
             >
-              <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 bg-gradient-to-br ${app.color} rounded-2xl flex items-center justify-center shadow-lg`}>
-                  <app.icon size={28} className="text-white" />
+              {/* App Icon and Basic Info */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
+                  <app.icon size={24} className="text-white" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-white mb-1">{app.name}</h3>
-                  <p className="text-white/70 mb-3">{app.description}</p>
-                  <div className="flex items-center gap-4 text-sm text-white/60">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm font-bold text-white mb-1 truncate">{app.name}</h3>
+                  <p className="text-xs text-white/60 mb-1">{app.category}</p>
+                  <div className="flex items-center gap-2 text-xs text-white/50">
                     <div className="flex items-center">
-                      <Star size={14} className="text-yellow-400 fill-current mr-1" />
+                      <Star size={10} className="text-yellow-400 fill-current mr-1" />
                       <span>{app.rating}</span>
                     </div>
-                    <span>•</span>
-                    <span>{app.category}</span>
                     <span>•</span>
                     <span>{app.size}</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-xs text-white/70 mb-4 line-clamp-2">{app.description}</p>
+
+              {/* Screenshots Indicator */}
+              <div className="flex gap-1 mb-4">
+                {Array.from({ length: app.screenshots }).map((_, i) => (
+                  <div key={i} className="w-8 h-6 bg-white/10 rounded border border-white/20"></div>
+                ))}
+              </div>
+
+              {/* Price and Action */}
+              <div className="flex items-center justify-between">
                 <div className="text-right">
-                  <p className="text-lg font-bold text-blue-400 mb-3">
+                  <p className="text-sm font-bold text-orange-400">
                     {getAppStatus(app.id) === 'available' ? `${app.price} COIN` : 'Zakupiono'}
                   </p>
-                  {renderActionButton(app)}
                 </div>
+                {renderActionButton(app)}
               </div>
             </div>
           ))}
