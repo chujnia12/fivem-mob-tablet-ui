@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Bell, AlertTriangle, CheckCircle, Info, Skull } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -80,11 +81,25 @@ const NotificationSystem = () => {
           
           // Odtwórz dźwięk dzwoneczka
           try {
-            const audio = new Audio();
-            audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuU2O/HeB4F';
-            audio.volume = 0.3;
-            audio.play().catch(() => {}); // Ignoruj błędy odtwarzania
-          } catch (e) {}
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.5);
+          } catch (e) {
+            console.log('Audio not supported');
+          }
         }
       }
     }, 10000);
@@ -138,14 +153,14 @@ const NotificationSystem = () => {
 
   return (
     <div className="relative">
-      {/* Notification Bell */}
+      {/* Small Notification Bell */}
       <button
         onClick={() => setShowNotifications(!showNotifications)}
-        className="relative bg-black/40 backdrop-blur-md border border-white/20 rounded-2xl p-3 hover:bg-black/60 transition-all duration-200 shadow-2xl"
+        className="relative p-1 hover:bg-white/10 rounded transition-all duration-200"
       >
-        <Bell size={20} className="text-white" />
+        <Bell size={16} className="text-white/80" />
         {unreadCount > 0 && (
-          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold shadow-lg animate-pulse">
+          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold text-[10px] animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </div>
         )}
@@ -153,27 +168,27 @@ const NotificationSystem = () => {
 
       {/* Notifications Panel */}
       {showNotifications && (
-        <div className="absolute top-full right-0 mt-3 w-96 bg-black/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
-          <div className="p-4 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-black/90 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-50">
+          <div className="p-3 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
             <div className="flex items-center justify-between">
-              <h3 className="text-white font-medium text-lg">Powiadomienia</h3>
+              <h3 className="text-white font-medium text-sm">Powiadomienia</h3>
               <button
                 onClick={() => setShowNotifications(false)}
-                className="text-white/60 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+                className="text-white/60 hover:text-white p-1 hover:bg-white/10 rounded transition-colors"
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             </div>
             {unreadCount > 0 && (
-              <p className="text-white/60 text-sm mt-1">{unreadCount} nieprzeczytanych</p>
+              <p className="text-white/60 text-xs mt-1">{unreadCount} nieprzeczytanych</p>
             )}
           </div>
           
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="p-8 text-center text-white/60">
-                <Bell size={32} className="mx-auto mb-3 opacity-50" />
-                <p>Brak powiadomień</p>
+              <div className="p-6 text-center text-white/60">
+                <Bell size={24} className="mx-auto mb-2 opacity-50" />
+                <p className="text-xs">Brak powiadomień</p>
               </div>
             ) : (
               <div className="space-y-1 p-2">
@@ -182,16 +197,19 @@ const NotificationSystem = () => {
                   return (
                     <div
                       key={notification.id}
-                      className={`p-4 rounded-xl border transition-all duration-200 cursor-pointer hover:bg-white/5 ${
+                      className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-white/5 ${
                         notification.read ? 'opacity-60' : 'shadow-lg'
                       } ${getNotificationColor(notification.type)}`}
-                      onClick={() => markAsRead(notification.id)}
+                      onClick={() => {
+                        markAsRead(notification.id);
+                        removeNotification(notification.id);
+                      }}
                     >
-                      <div className="flex items-start gap-3">
-                        <Icon size={18} className="mt-0.5 flex-shrink-0" />
+                      <div className="flex items-start gap-2">
+                        <Icon size={14} className="mt-0.5 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-white font-medium text-sm">
+                          <div className="flex items-center justify-between mb-1">
+                            <h4 className="text-white font-medium text-xs">
                               {notification.title}
                             </h4>
                             <button
@@ -199,21 +217,21 @@ const NotificationSystem = () => {
                                 e.stopPropagation();
                                 removeNotification(notification.id);
                               }}
-                              className="text-white/40 hover:text-white/80 p-1 hover:bg-white/10 rounded"
+                              className="text-white/40 hover:text-white/80 p-0.5 hover:bg-white/10 rounded"
                             >
-                              <X size={12} />
+                              <X size={10} />
                             </button>
                           </div>
-                          <p className="text-white/80 text-sm mb-2 leading-relaxed">
+                          <p className="text-white/80 text-xs mb-1 leading-relaxed">
                             {notification.message}
                           </p>
-                          <span className="text-white/40 text-xs">
+                          <span className="text-white/40 text-[10px]">
                             {formatTime(notification.timestamp)}
                           </span>
                         </div>
                       </div>
                       {!notification.read && (
-                        <div className="absolute left-2 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <div className="absolute left-1 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
                       )}
                     </div>
                   );
@@ -223,17 +241,17 @@ const NotificationSystem = () => {
           </div>
           
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-white/10 bg-gradient-to-r from-gray-900/40 to-black/40">
-              <div className="flex gap-2">
+            <div className="p-2 border-t border-white/10 bg-gradient-to-r from-gray-900/40 to-black/40">
+              <div className="flex gap-1">
                 <button
                   onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
-                  className="flex-1 text-xs text-white/60 hover:text-white transition-colors py-2 px-3 rounded-lg hover:bg-white/10"
+                  className="flex-1 text-[10px] text-white/60 hover:text-white transition-colors py-1.5 px-2 rounded hover:bg-white/10"
                 >
                   Oznacz jako przeczytane
                 </button>
                 <button
                   onClick={() => setNotifications([])}
-                  className="flex-1 text-xs text-white/60 hover:text-red-400 transition-colors py-2 px-3 rounded-lg hover:bg-red-500/10"
+                  className="flex-1 text-[10px] text-white/60 hover:text-red-400 transition-colors py-1.5 px-2 rounded hover:bg-red-500/10"
                 >
                   Wyczyść wszystkie
                 </button>
