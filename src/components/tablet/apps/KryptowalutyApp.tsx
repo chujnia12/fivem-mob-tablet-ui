@@ -498,7 +498,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
         }
