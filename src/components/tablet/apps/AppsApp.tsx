@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Grid3X3, Download, Star, Search, Smartphone, Users, DollarSign, Shield, Bitcoin } from 'lucide-react';
+import { ArrowLeft, Download, Star, Search, Bitcoin } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
@@ -15,7 +15,6 @@ interface AppsAppProps {
 }
 
 const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
@@ -25,36 +24,21 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
   // TODO: Fetch from database - available_apps table
   const availableApps = [
     {
-      id: 'secure-comm',
-      name: 'SecureComm',
-      description: 'Szyfrowana komunikacja między członkami organizacji',
-      category: 'communication',
+      id: 'zlecenia',
+      name: 'Zlecenia Pro',
+      description: 'Zaawansowany system zarządzania zleceniami organizacji',
       rating: 4.8,
       downloads: 15420,
-      price: 0,
+      price: 2.5,
       installed: false,
       icon: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop',
       developer: 'CrimeTech Solutions',
       size: '12.4 MB'
     },
     {
-      id: 'territory-map',
-      name: 'Territory Mapper',
-      description: 'Mapa terytoriów z oznaczeniem wpływów organizacji',
-      category: 'tools',
-      rating: 4.6,
-      downloads: 8930,
-      price: 2.5,
-      installed: true,
-      icon: 'https://images.unsplash.com/photo-1569336415962-a4bd9f69ed03?w=100&h=100&fit=crop',
-      developer: 'Underground Maps',
-      size: '28.7 MB'
-    },
-    {
-      id: 'crypto-wallet',
+      id: 'kryptowaluty',
       name: 'CryptoVault Pro',
       description: 'Zaawansowany portfel kryptowalut z funkcjami prania',
-      category: 'finance',
       rating: 4.9,
       downloads: 23450,
       price: 5.0,
@@ -64,23 +48,9 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
       size: '45.2 MB'
     },
     {
-      id: 'member-tracker',
-      name: 'Gang Tracker',
-      description: 'Śledzenie lokalizacji i aktywności członków',
-      category: 'management',
-      rating: 4.2,
-      downloads: 6780,
-      price: 1.5,
-      installed: true,
-      icon: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop',
-      developer: 'Surveillance Systems',
-      size: '19.8 MB'
-    },
-    {
-      id: 'heist-planner',
+      id: 'napady',
       name: 'Heist Planner Pro',
       description: 'Planowanie i koordynacja skomplikowanych operacji',
-      category: 'tools',
       rating: 4.7,
       downloads: 12340,
       price: 7.5,
@@ -88,66 +58,14 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
       icon: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop',
       developer: 'Criminal Masterminds',
       size: '67.3 MB'
-    },
-    {
-      id: 'police-scanner',
-      name: 'Police Scanner Plus',
-      description: 'Monitorowanie częstotliwości policyjnych i służb',
-      category: 'security',
-      rating: 4.4,
-      downloads: 18670,
-      price: 3.0,
-      installed: false,
-      icon: 'https://images.unsplash.com/photo-1593642532842-98d0fd5ebc1a?w=100&h=100&fit=crop',
-      developer: 'Radio Interceptors',
-      size: '23.1 MB'
-    },
-    {
-      id: 'money-laundry',
-      name: 'Clean Cash',
-      description: 'Automatyczne pranie pieniędzy przez legalne biznesy',
-      category: 'finance',
-      rating: 4.3,
-      downloads: 9450,
-      price: 10.0,
-      installed: true,
-      icon: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=100&h=100&fit=crop',
-      developer: 'Laundry Solutions Inc.',
-      size: '34.6 MB'
-    },
-    {
-      id: 'anonymous-chat',
-      name: 'GhostChat',
-      description: 'Anonimowa komunikacja z autodestruct wiadomości',
-      category: 'communication',
-      rating: 4.9,
-      downloads: 34560,
-      price: 0,
-      installed: false,
-      icon: 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?w=100&h=100&fit=crop',
-      developer: 'Phantom Communications',
-      size: '8.2 MB'
     }
-  ];
-
-  const categories = [
-    { id: 'all', name: 'Wszystkie', icon: Grid3X3 },
-    { id: 'communication', name: 'Komunikacja', icon: Smartphone },
-    { id: 'finance', name: 'Finanse', icon: DollarSign },
-    { id: 'management', name: 'Zarządzanie', icon: Users },
-    { id: 'tools', name: 'Narzędzia', icon: Grid3X3 },
-    { id: 'security', name: 'Bezpieczeństwo', icon: Shield }
   ];
 
   const filteredApps = availableApps.filter(app => {
     const matchesSearch = app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          app.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || app.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
   });
-
-  const installedCount = availableApps.filter(app => app.installed).length;
 
   const handlePurchase = (app: typeof availableApps[0]) => {
     if (app.price === 0) {
@@ -183,7 +101,9 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
             <ArrowLeft size={20} />
           </Button>
           <div className="flex items-center gap-3">
-            <Grid3X3 className="text-cyan-400" size={24} />
+            <div className="w-8 h-8 bg-cyan-600 rounded-xl flex items-center justify-center">
+              <Download className="text-white" size={20} />
+            </div>
             <h1 className="text-xl font-medium">Sklep z Aplikacjami</h1>
           </div>
         </div>
@@ -194,139 +114,98 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
               <span className="text-yellow-400 font-medium">{userCrypto.toFixed(2)} BTC</span>
             </div>
           </div>
-          <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
-            <span className="text-white/60 text-sm">Zainstalowane: </span>
-            <span className="text-cyan-400 font-medium">{installedCount}</span>
-          </div>
         </div>
       </div>
 
-      <div className="flex h-[calc(100%-5rem)]">
-        {/* Categories Sidebar */}
-        <div className="w-64 bg-white/5 backdrop-blur-sm border-r border-white/10">
-          <div className="p-4">
-            <h3 className="text-sm font-medium text-white/60 mb-4 uppercase tracking-wider">Kategorie</h3>
-            <div className="space-y-2">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-200 ${
-                    selectedCategory === category.id
-                      ? 'bg-white/10 text-white border border-white/20'
-                      : 'text-white/70 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <category.icon size={18} className="text-cyan-400" />
-                  <span className="font-medium">{category.name}</span>
-                </button>
-              ))}
-            </div>
+      <div className="p-6 space-y-6 h-[calc(100%-5rem)]">
+        {/* Search */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" size={20} />
+            <Input
+              placeholder="Szukaj aplikacji..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
+            />
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 p-6 space-y-6">
-          {/* Search */}
-          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" size={20} />
-              <Input
-                placeholder="Szukaj aplikacji..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
-              />
-            </div>
-          </div>
-
-          {/* Apps Grid */}
-          <ScrollArea className="h-[calc(100%-8rem)]">
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pr-4">
-              {filteredApps.map((app) => (
-                <div key={app.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
-                  <div className="flex items-start gap-4 mb-4">
+        {/* Apps Grid */}
+        <ScrollArea className="h-[calc(100%-8rem)]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pr-4">
+            {filteredApps.map((app) => (
+              <div key={app.id} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 rounded-3xl p-8 hover:from-white/15 hover:to-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                <div className="flex flex-col items-center text-center space-y-6">
+                  {/* App Icon */}
+                  <div className="relative">
                     <img
                       src={app.icon}
                       alt={app.name}
-                      className="w-16 h-16 rounded-xl object-cover"
+                      className="w-20 h-20 rounded-2xl object-cover shadow-lg group-hover:shadow-xl transition-shadow duration-300"
                     />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-white">{app.name}</h3>
-                        {app.installed && (
-                          <div className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-lg font-medium">
-                            ZAINSTALOWANA
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-white/60 text-sm mb-2">{app.developer}</p>
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Star size={12} className="text-yellow-400 fill-current" />
-                          <span className="text-white/80">{app.rating}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Download size={12} className="text-white/60" />
-                          <span className="text-white/60">{app.downloads.toLocaleString()}</span>
-                        </div>
-                        <div className="text-white/60">{app.size}</div>
-                      </div>
+                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                      <Download size={12} className="text-white" />
                     </div>
                   </div>
 
-                  <p className="text-white/80 text-sm mb-4 line-clamp-2">
-                    {app.description}
-                  </p>
+                  {/* App Info */}
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-bold text-white text-lg mb-1">{app.name}</h3>
+                      <p className="text-white/60 text-sm">{app.developer}</p>
+                    </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="text-lg font-bold">
+                    <p className="text-white/80 text-sm leading-relaxed line-clamp-3">
+                      {app.description}
+                    </p>
+
+                    {/* App Stats */}
+                    <div className="flex items-center justify-center gap-4 text-xs">
+                      <div className="flex items-center gap-1">
+                        <Star size={12} className="text-yellow-400 fill-current" />
+                        <span className="text-white/80 font-medium">{app.rating}</span>
+                      </div>
+                      <div className="w-px h-3 bg-white/20"></div>
+                      <div className="flex items-center gap-1">
+                        <Download size={12} className="text-white/60" />
+                        <span className="text-white/60">{app.downloads.toLocaleString()}</span>
+                      </div>
+                      <div className="w-px h-3 bg-white/20"></div>
+                      <div className="text-white/60">{app.size}</div>
+                    </div>
+                  </div>
+
+                  {/* Price and Purchase */}
+                  <div className="w-full space-y-4">
+                    <div className="text-center">
                       {app.price === 0 ? (
-                        <span className="text-green-400">DARMOWA</span>
+                        <div className="text-2xl font-bold text-green-400">DARMOWA</div>
                       ) : (
-                        <div className="flex items-center gap-1">
-                          <Bitcoin size={16} className="text-yellow-400" />
-                          <span className="text-yellow-400">{app.price} BTC</span>
+                        <div className="flex items-center justify-center gap-2">
+                          <Bitcoin size={20} className="text-yellow-400" />
+                          <span className="text-2xl font-bold text-yellow-400">{app.price}</span>
                         </div>
                       )}
                     </div>
 
-                    {app.installed ? (
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent rounded-xl"
-                        >
-                          USUŃ
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl"
-                        >
-                          OTWÓRZ
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        size="sm"
-                        onClick={() => handlePurchase(app)}
-                        disabled={app.price > 0 && userCrypto < app.price}
-                        className={`rounded-xl ${
-                          app.price > 0 && userCrypto < app.price
-                            ? 'bg-gray-600 hover:bg-gray-700 text-gray-300 cursor-not-allowed'
-                            : 'bg-cyan-600 hover:bg-cyan-700 text-white'
-                        }`}
-                      >
-                        {app.price === 0 ? 'POBIERZ' : 'KUP'}
-                      </Button>
-                    )}
+                    <Button
+                      onClick={() => handlePurchase(app)}
+                      disabled={app.price > 0 && userCrypto < app.price}
+                      className={`w-full rounded-2xl font-bold py-6 text-lg transition-all duration-300 ${
+                        app.price > 0 && userCrypto < app.price
+                          ? 'bg-gray-600/50 hover:bg-gray-600/70 text-gray-300 cursor-not-allowed border border-gray-500/30'
+                          : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl border border-cyan-500/30'
+                      }`}
+                    >
+                      {app.price === 0 ? 'POBIERZ' : 'KUP TERAZ'}
+                    </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );

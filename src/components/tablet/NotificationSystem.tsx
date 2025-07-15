@@ -79,10 +79,11 @@ const NotificationSystem = () => {
             variant: newNotification.type === 'error' ? 'destructive' : 'default',
           });
           
-          // Odtwórz dźwięk powiadomienia
+          // Odtwórz dźwięk dzwoneczka
           try {
-            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuU2O/HeB4F');
-            audio.volume = 0.3;
+            const audio = new Audio();
+            audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuU2O/HeB4F';
+            audio.volume = 0.5;
             audio.play().catch(() => {}); // Ignoruj błędy odtwarzania
           } catch (e) {}
         }
@@ -137,7 +138,7 @@ const NotificationSystem = () => {
   };
 
   return (
-    <div className="fixed top-6 left-4 z-50">
+    <div className="absolute top-6 left-6 z-50">
       {/* Notification Bell */}
       <button
         onClick={() => setShowNotifications(!showNotifications)}

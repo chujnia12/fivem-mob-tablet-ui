@@ -7,10 +7,7 @@ import {
   ShoppingBag, 
   Settings, 
   BarChart3,
-  FileText,
-  Bitcoin,
-  Grid3X3,
-  Skull
+  Grid3X3
 } from 'lucide-react';
 import { AppType } from '../../pages/TabletOS';
 
@@ -39,17 +36,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
     return ranks[rankNumber as keyof typeof ranks] || 'CZŁONEK';
   };
 
-  const apps = [
+  // Domyślnie dostępne aplikacje
+  const defaultApps = [
     { id: 'finance', name: 'Finanse', icon: DollarSign, color: 'bg-green-600' },
     { id: 'members', name: 'Członkowie', icon: Users, color: 'bg-blue-600' },
     { id: 'transactions', name: 'Transakcje', icon: CreditCard, color: 'bg-purple-600' },
     { id: 'orders', name: 'Zamówienia', icon: ShoppingBag, color: 'bg-orange-600' },
     { id: 'stats', name: 'Statystyki', icon: BarChart3, color: 'bg-indigo-600' },
-    { id: 'zlecenia', name: 'Zlecenia', icon: FileText, color: 'bg-red-600' },
-    { id: 'kryptowaluty', name: 'Krypto', icon: Bitcoin, color: 'bg-yellow-600' },
-    { id: 'napady', name: 'Napady', icon: Skull, color: 'bg-pink-600' },
-    { id: 'apps', name: 'Apps', icon: Grid3X3, color: 'bg-cyan-600' },
     { id: 'settings', name: 'Ustawienia', icon: Settings, color: 'bg-gray-600' },
+    { id: 'apps', name: 'Apps', icon: Grid3X3, color: 'bg-cyan-600' },
   ];
 
   return (
@@ -59,8 +54,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
       
       {/* Apps Grid - iPad style */}
       <div className="relative z-10 p-12 h-full flex flex-col justify-center">
-        <div className="grid grid-cols-5 gap-8 max-w-5xl mx-auto">
-          {apps.map((app) => (
+        <div className="grid grid-cols-4 gap-8 max-w-4xl mx-auto">
+          {defaultApps.map((app) => (
             <button
               key={app.id}
               onClick={() => onOpenApp(app.id as AppType)}

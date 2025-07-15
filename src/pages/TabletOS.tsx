@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
@@ -98,20 +97,22 @@ const TabletOS = () => {
             </div>
             
             {/* Notification System */}
-            <NotificationSystem />
-            
-            {/* App Content */}
-            <div className="h-[calc(100%-3rem)]">
-              {renderCurrentApp()}
+            <div className="relative">
+              <NotificationSystem />
+              
+              {/* App Content */}
+              <div className="h-[calc(100vh-12rem)]">
+                {renderCurrentApp()}
+              </div>
             </div>
           </div>
         </div>
         
         {/* Home Button - iPhone style bar */}
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
+        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
           <button
             onClick={goHome}
-            className="w-32 h-1 bg-white/80 rounded-full hover:bg-white transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg"
+            className="w-36 h-1.5 bg-gradient-to-r from-white/60 via-white/90 to-white/60 rounded-full hover:from-white/80 hover:via-white hover:to-white/80 transition-all duration-300 hover:scale-110 active:scale-95 shadow-xl"
           >
           </button>
         </div>
