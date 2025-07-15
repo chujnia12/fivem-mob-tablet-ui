@@ -11,42 +11,12 @@ interface Notification {
   read: boolean;
 }
 
-const NotificationSystem = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'success',
-      title: 'Kontrakt ukończony',
-      message: 'Otrzymano 5.2 LCOIN za eliminację rywala',
-      timestamp: new Date(Date.now() - 2 * 60 * 1000),
-      read: false
-    },
-    {
-      id: '2',
-      type: 'info',
-      title: 'Nowe zlecenie',
-      message: 'Dostępny napad na bank - nagroda 15.8 VCASH',
-      timestamp: new Date(Date.now() - 8 * 60 * 1000),
-      read: false
-    },
-    {
-      id: '3',
-      type: 'warning',
-      title: 'Niski stan portfela',
-      message: 'Saldo SANCOIN spadło poniżej 10 monet',
-      timestamp: new Date(Date.now() - 25 * 60 * 1000),
-      read: true
-    },
-    {
-      id: '4',
-      type: 'error',
-      title: 'Misja nieudana',
-      message: 'Kontrakt "Sabotaż Rywala" zakończony niepowodzeniem',
-      timestamp: new Date(Date.now() - 45 * 60 * 1000),
-      read: false
-    }
-  ]);
+interface NotificationSystemProps {
+  notifications: Notification[];
+  onNotificationRead: (id: string) => void;
+}
 
+const NotificationSystem = ({ notifications, onNotificationRead }: NotificationSystemProps) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [inAppNotification, setInAppNotification] = useState<Notification | null>(null);
@@ -108,48 +78,6 @@ const NotificationSystem = () => {
     }
   };
 
-  // Simulate new notifications
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (Math.random() > 0.8) {
-        const newNotification: Notification = {
-          id: Date.now().toString(),
-          type: ['success', 'info', 'warning'][Math.floor(Math.random() * 3)] as any,
-          title: [
-            'Nowe zlecenie dostępne',
-            'Członek dołączył do organizacji',
-            'Transakcja krypto potwierdzona',
-            'Aktualizacja terytoriów'
-          ][Math.floor(Math.random() * 4)],
-          message: 'Nowe powiadomienie otrzymane',
-          timestamp: new Date(),
-          read: false
-        };
-
-        setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
-        
-        // Show in-app notification for 4 seconds
-        setInAppNotification(newNotification);
-        playNotificationSound();
-        
-        if (inAppTimeoutRef.current) {
-          clearTimeout(inAppTimeoutRef.current);
-        }
-        
-        inAppTimeoutRef.current = setTimeout(() => {
-          setInAppNotification(null);
-        }, 4000);
-      }
-    }, 10000);
-
-    return () => {
-      clearInterval(interval);
-      if (inAppTimeoutRef.current) {
-        clearTimeout(inAppTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'success': return CheckCircle;
@@ -174,13 +102,12 @@ const NotificationSystem = () => {
   const latestNotification = notifications[0];
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ));
+    onNotificationRead(id);
   };
 
   const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    // This would need to be handled by parent component
+    console.log('Remove notification:', id);
   };
 
   const formatTime = (timestamp: Date) => {
@@ -378,13 +305,13 @@ const NotificationSystem = () => {
                     </button>
                   )}
                   <button
-                    onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
+                    onClick={() => notifications.forEach(n => markAsRead(n.id))}
                     className="flex-1 text-[10px] text-white/60 hover:text-white transition-colors py-1.5 px-2 rounded hover:bg-white/10"
                   >
                     Oznacz jako przeczytane
                   </button>
                   <button
-                    onClick={() => setNotifications([])}
+                    onClick={() => console.log('Clear all notifications')}
                     className="flex-1 text-[10px] text-white/60 hover:text-red-400 transition-colors py-1.5 px-2 rounded hover:bg-red-500/10"
                   >
                     Wyczyść wszystkie

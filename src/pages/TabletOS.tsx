@@ -186,7 +186,14 @@ const TabletOS = () => {
 
         {/* Notification System */}
         <NotificationSystem 
-          notifications={notifications}
+          notifications={notifications.map(n => ({
+            id: n.id,
+            type: n.type as 'success' | 'warning' | 'info' | 'error',
+            title: n.title,
+            message: n.message,
+            timestamp: new Date(n.time),
+            read: n.read
+          }))}
           onNotificationRead={(id) => {
             setNotifications(prev => 
               prev.map(notif => 
