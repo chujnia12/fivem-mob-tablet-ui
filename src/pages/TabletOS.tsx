@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
@@ -14,6 +13,7 @@ import AppsApp from '../components/tablet/apps/AppsApp';
 import NapadyApp from '../components/tablet/apps/NapadyApp';
 import NotesApp from '../components/tablet/apps/NotesApp';
 import NotificationSystem from '../components/tablet/NotificationSystem';
+import { Wifi } from 'lucide-react';
 
 export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats' | 'zlecenia' | 'kryptowaluty' | 'apps' | 'napady' | 'notes';
 
@@ -111,20 +111,22 @@ const TabletOS = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-gray-900 flex items-center justify-center overflow-hidden">
+    <div className="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
       <div className="relative">
         {/* Tablet Frame - Thinner borders */}
-        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2rem] p-1.5 shadow-2xl border border-gray-700">
+        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[1.5rem] p-1 shadow-2xl border border-gray-700">
           {/* Screen */}
-          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[1.5rem] overflow-hidden relative border border-gray-800">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[1.2rem] overflow-hidden relative border border-gray-800">
             {/* Status Bar */}
             <div className="flex justify-between items-center px-6 py-3 text-white text-sm bg-black/20 backdrop-blur-sm border-b border-white/5 relative z-30">
-              <div className="flex items-center gap-1">
-                <div className="w-1 h-1 bg-white/80 rounded-full"></div>
-                <div className="w-1 h-1 bg-white/80 rounded-full"></div>
-                <div className="w-1 h-1 bg-white/80 rounded-full"></div>
-                <div className="w-1 h-1 bg-white/80 rounded-full"></div>
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+              <div className="flex items-center gap-2">
+                <Wifi size={16} className="text-white/80" />
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                  <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                  <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
               </div>
               <div className="text-xs font-medium text-white/90">
                 {new Date().toLocaleTimeString('pl-PL', { 

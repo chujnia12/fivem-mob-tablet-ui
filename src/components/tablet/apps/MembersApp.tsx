@@ -404,7 +404,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
           
           <div className="space-y-4 py-4">
             <Input
-              placeholder="ID gracza (np. 12345)"
+              placeholder="ID gracza"
               value={playerIdToHire}
               onChange={(e) => setPlayerIdToHire(e.target.value)}
               className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
@@ -415,7 +415,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
             <Button
               variant="outline"
               onClick={() => setShowHireDialog(false)}
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-white/20 text-white hover:bg-white/10 bg-transparent"
             >
               Anuluj
             </Button>
@@ -472,7 +472,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
             <Button
               variant="outline"
               onClick={() => setShowPromoteDialog(false)}
-              className="border-white/20 text-white hover:bg-white/10"
+              className="border-white/20 text-white hover:bg-white/10 bg-transparent"
             >
               Anuluj
             </Button>
@@ -514,7 +514,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel className="border-white/20 text-white hover:bg-white/10">
+            <AlertDialogCancel className="border-white/20 text-white hover:bg-white/10 bg-transparent">
               Anuluj
             </AlertDialogCancel>
             <AlertDialogAction
