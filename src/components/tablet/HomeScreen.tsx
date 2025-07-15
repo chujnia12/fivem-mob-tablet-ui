@@ -39,66 +39,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
   ];
 
   return (
-    <div className="h-full bg-gradient-to-br from-slate-800 to-slate-900 relative">
-      {/* Wallpaper with city background */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1200')] bg-cover bg-center opacity-30"></div>
+    <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black relative">
+      {/* Dark minimalist background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/10 via-black to-purple-900/10"></div>
       
-      {/* Top Status */}
-      <div className="relative z-10 flex justify-between items-center px-8 py-4 text-white">
-        <div className="flex items-center gap-2">
-          <Clock size={16} />
-          <span className="text-lg font-semibold">{currentTime}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Wifi size={16} />
-          <Battery size={16} />
-          <span className="text-green-400">100%</span>
-        </div>
-      </div>
-
-      {/* Organization Info Widget */}
-      <div className="relative z-10 mx-8 mt-8 bg-black/70 backdrop-blur-sm rounded-2xl p-6 border border-red-500/30">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Panel Zarządzania Organizacją</h2>
-          <p className="text-gray-300 mb-4">Zarządzaj swoją organizacją w jednym miejscu</p>
-          <div className="bg-red-600/20 border border-red-500 rounded-lg p-4">
-            <div className="text-red-400 text-sm mb-1">Saldo Organizacji</div>
-            <div className="text-3xl font-bold text-white">
-              ${orgData.balance.toLocaleString()}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Apps Grid */}
-      <div className="relative z-10 px-8 mt-8">
-        <div className="grid grid-cols-3 gap-6">
+      {/* Apps Grid - iPad style */}
+      <div className="relative z-10 p-12 h-full flex flex-col justify-center">
+        <div className="grid grid-cols-4 gap-8 max-w-4xl mx-auto">
           {apps.map((app) => (
             <button
               key={app.id}
               onClick={() => onOpenApp(app.id as AppType)}
-              className="group"
+              className="group flex flex-col items-center"
             >
-              <div className={`${app.color} w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-200 mx-auto mb-2`}>
-                <app.icon size={32} className="text-white" />
+              <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-white/20 transition-all duration-200 mb-3 border border-white/20">
+                <app.icon size={28} className="text-white" />
               </div>
-              <div className="text-white text-sm font-medium text-center">
+              <div className="text-white text-xs font-medium text-center opacity-90">
                 {app.name}
               </div>
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Bottom Dock */}
-      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-2xl px-6 py-3">
-        <div className="flex items-center gap-4 text-white text-sm">
-          <div className="text-red-400">●</div>
-          <span>Organizacja {orgData.name}</span>
-          <div className="w-px h-4 bg-gray-600"></div>
-          <span>Ranga: {orgData.rank}</span>
-          <div className="w-px h-4 bg-gray-600"></div>
-          <span>ID: {orgData.id}</span>
+        {/* Organization Info - Minimalist */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl px-6 py-2 border border-white/10">
+            <div className="flex items-center gap-4 text-white text-sm">
+              <span className="text-white/60">Organizacja:</span>
+              <span className="font-medium">{orgData.name}</span>
+              <div className="w-px h-4 bg-white/20"></div>
+              <span className="text-green-400">${orgData.balance.toLocaleString()}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -27,63 +27,58 @@ const TransactionsApp: React.FC<TransactionsAppProps> = ({ orgData, onHome }) =>
   ];
 
   return (
-    <div className="h-full bg-gradient-to-br from-slate-900 to-black text-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-gray-800">
+    <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black text-white">
+      {/* Header - minimalist */}
+      <div className="flex items-center justify-between p-6 border-b border-white/10">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={onHome}
-            className="text-white hover:bg-gray-800"
+            className="text-white hover:bg-white/10 rounded-full"
           >
             <ArrowLeft size={20} />
           </Button>
-          <h1 className="text-2xl font-bold">Historia Transakcji</h1>
+          <h1 className="text-xl font-medium">Transakcje</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="border-gray-600">
+          <Button variant="ghost" className="text-white/60 hover:text-white border border-white/20 rounded-xl">
             <RefreshCw size={16} className="mr-2" />
-            ODŚWIEŻ
-          </Button>
-          <Button variant="destructive">
-            <Trash2 size={16} className="mr-2" />
-            WYCZYŚĆ
+            Odśwież
           </Button>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="p-6">
-        <div className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
+      {/* Table - minimalist */}
+      <div className="p-8">
+        {/* TODO: Sync with orgmdt-finanse table - fetch transactions by job */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-7 gap-4 p-4 border-b border-red-500 bg-gray-800 text-sm font-semibold">
-            <div>LP.</div>
-            <div>TYP</div>
-            <div>KWOTA</div>
-            <div>TYTUŁ</div>
-            <div>OSOBA</div>
-            <div>DATA</div>
-            <div>STATUS</div>
+          <div className="grid grid-cols-6 gap-4 p-4 border-b border-white/10 bg-white/5 text-sm font-medium text-white/80">
+            <div>Typ</div>
+            <div>Kwota</div>
+            <div>Tytuł</div>
+            <div>Osoba</div>
+            <div>Data</div>
+            <div>Czas</div>
           </div>
 
           {/* Table Body */}
           <div className="max-h-96 overflow-y-auto">
             {transactions.map((transaction) => (
-              <div key={transaction.id} className="grid grid-cols-7 gap-4 p-4 border-b border-gray-700 hover:bg-gray-800 transition-colors">
-                <div className="text-red-400">{transaction.id}</div>
+              <div key={transaction.id} className="grid grid-cols-6 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
                 <div className="flex items-center">
                   {transaction.type === 'deposit' ? (
-                    <span className="text-green-400">↑ Wpłata</span>
+                    <span className="text-green-400 text-sm">Wpłata</span>
                   ) : (
-                    <span className="text-red-400">↓ Wypłata</span>
+                    <span className="text-red-400 text-sm">Wypłata</span>
                   )}
                 </div>
-                <div className="font-semibold">{transaction.amount} zł</div>
-                <div className="text-gray-300">{transaction.title}</div>
-                <div>{transaction.person}</div>
-                <div className="text-gray-400">{transaction.date}</div>
-                <div className="text-gray-400">{transaction.time}</div>
+                <div className="font-medium">{transaction.amount} zł</div>
+                <div className="text-white/60">{transaction.title}</div>
+                <div className="text-white/60">{transaction.person}</div>
+                <div className="text-white/60 text-sm">{transaction.date}</div>
+                <div className="text-white/60 text-sm">{transaction.time}</div>
               </div>
             ))}
           </div>

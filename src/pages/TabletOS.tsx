@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
@@ -13,11 +12,15 @@ export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders'
 
 const TabletOS = () => {
   const [currentApp, setCurrentApp] = useState<AppType>('home');
+  
+  // TODO: Replace with database integration
+  // Fetch from addon_account_data table for balance
+  // Fetch from jobs table for organization data
   const [orgData] = useState({
     name: 'Ballas',
     rank: 3,
     id: 2,
-    balance: 12329713
+    balance: 12329713 // TODO: Sync with addon_account_data
   });
 
   const openApp = (app: AppType) => {
@@ -48,39 +51,52 @@ const TabletOS = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center p-4">
       <div className="relative">
-        {/* Tablet Frame */}
-        <div className="w-[1024px] h-[768px] bg-black rounded-[3rem] p-6 shadow-2xl">
+        {/* Tablet Frame - iPad-like design */}
+        <div className="w-[1024px] h-[768px] bg-gray-800 rounded-[3rem] p-3 shadow-2xl border border-gray-700">
           {/* Screen */}
-          <div className="w-full h-full bg-slate-900 rounded-[2rem] overflow-hidden relative">
-            {/* Status Bar */}
-            <div className="flex justify-between items-center px-6 py-2 bg-black/50 text-white text-sm">
-              <div className="flex items-center gap-2">
-                <div className="text-red-500 font-semibold">Organizacja</div>
-                <div className="text-white font-bold">{orgData.name}</div>
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[2.5rem] overflow-hidden relative">
+            {/* Status Bar - iPad style */}
+            <div className="flex justify-between items-center px-6 py-3 text-white text-sm bg-black/10">
+              <div className="flex items-center gap-1">
+                <div className="w-1 h-1 bg-white rounded-full"></div>
+                <div className="w-1 h-1 bg-white rounded-full"></div>
+                <div className="w-1 h-1 bg-white rounded-full"></div>
+                <div className="w-1 h-1 bg-white rounded-full"></div>
+                <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
-              <div className="flex items-center gap-4">
-                <div>Ranga: {orgData.rank}</div>
-                <div>ID: {orgData.id}</div>
-                <div className="text-green-500">●</div>
+              <div className="text-xs font-medium">
+                {new Date().toLocaleTimeString('pl-PL', { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  weekday: 'short',
+                  day: 'numeric',
+                  month: 'short'
+                })}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs">100%</span>
+                <div className="w-6 h-3 border border-white/50 rounded-sm">
+                  <div className="w-full h-full bg-green-500 rounded-sm"></div>
+                </div>
               </div>
             </div>
             
             {/* App Content */}
-            <div className="h-[calc(100%-2rem)]">
+            <div className="h-[calc(100%-3rem)]">
               {renderCurrentApp()}
             </div>
           </div>
         </div>
         
-        {/* Home Button */}
-        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+        {/* Home Button - iPad style */}
+        <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
           <button
             onClick={goHome}
-            className="w-16 h-16 bg-black rounded-full flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors"
+            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl hover:bg-gray-100 transition-all duration-200 border-2 border-gray-300"
           >
-            <div className="w-8 h-8 bg-white rounded-full"></div>
+            <div className="w-4 h-4 bg-black rounded-full"></div>
           </button>
         </div>
       </div>
