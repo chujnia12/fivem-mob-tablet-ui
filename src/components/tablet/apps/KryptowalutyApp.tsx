@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, RefreshCw, DollarSign, CreditCard, ArrowUpDown, Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, RefreshCw, DollarSign, CreditCard, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
@@ -29,8 +29,8 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
   const [transferAmount, setTransferAmount] = useState('');
   const [transferWallet, setTransferWallet] = useState('');
   const [transferCrypto, setTransferCrypto] = useState('LCOIN');
-  const [copiedWallet, setCopiedWallet] = useState<string | null>(null);
 
+  // TODO: Fetch from database - crypto_wallets table
   const [wallets, setWallets] = useState([
     {
       id: 'wallet_1',
@@ -64,6 +64,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
     }
   ]);
 
+  // TODO: Fetch from database - crypto_transactions table
   const [transactions, setTransactions] = useState([
     {
       id: 'tx1',
@@ -99,16 +100,6 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
 
   const totalBalance = wallets.reduce((sum, wallet) => sum + (wallet.balance * wallet.price_usd), 0);
 
-  const copyToClipboard = async (address: string) => {
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopiedWallet(address);
-      setTimeout(() => setCopiedWallet(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy: ', err);
-    }
-  };
-
   const handlePurchase = () => {
     if (!purchaseAmount || parseFloat(purchaseAmount) <= 0) return;
 
@@ -116,12 +107,14 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
     const wallet = wallets.find(w => w.currency === selectedCrypto);
     if (!wallet) return;
 
+    // Simulate purchase
     setWallets(prev => prev.map(w => 
       w.currency === selectedCrypto 
         ? { ...w, balance: w.balance + amount }
         : w
     ));
 
+    // Add transaction
     const newTransaction = {
       id: `tx_${Date.now()}`,
       type: 'purchase' as const,
@@ -145,12 +138,14 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
     const wallet = wallets.find(w => w.currency === transferCrypto);
     if (!wallet || wallet.balance < amount) return;
 
+    // Simulate transfer
     setWallets(prev => prev.map(w => 
       w.currency === transferCrypto 
         ? { ...w, balance: w.balance - amount }
         : w
     ));
 
+    // Add transaction
     const newTransaction = {
       id: `tx_${Date.now()}`,
       type: 'transfer' as const,
@@ -238,10 +233,10 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
                   <select
                     value={selectedCrypto}
                     onChange={(e) => setSelectedCrypto(e.target.value)}
-                    className="w-full mt-1 p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full mt-1 p-2 bg-gray-800 border border-white/20 rounded-md text-white [&>option]:bg-gray-800 [&>option]:text-white"
                   >
                     {wallets.map(wallet => (
-                      <option key={wallet.currency} value={wallet.currency} className="bg-gray-900 text-white">
+                      <option key={wallet.currency} value={wallet.currency}>
                         {wallet.icon} {wallet.name} ({wallet.currency})
                       </option>
                     ))}
@@ -268,9 +263,9 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
               </div>
               <DialogFooter>
                 <Button 
-                  variant="ghost"
+                  variant="outline" 
                   onClick={() => setIsPurchasing(false)}
-                  className="text-white/70 hover:text-white hover:bg-white/10"
+                  className="border-white/20 text-white hover:bg-white/10 bg-transparent"
                 >
                   Anuluj
                 </Button>
@@ -302,10 +297,10 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
                   <select
                     value={transferCrypto}
                     onChange={(e) => setTransferCrypto(e.target.value)}
-                    className="w-full mt-1 p-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full mt-1 p-2 bg-gray-800 border border-white/20 rounded-md text-white [&>option]:bg-gray-800 [&>option]:text-white"
                   >
                     {wallets.map(wallet => (
-                      <option key={wallet.currency} value={wallet.currency} className="bg-gray-900 text-white">
+                      <option key={wallet.currency} value={wallet.currency}>
                         {wallet.icon} {wallet.name} - {wallet.balance.toFixed(4)} {wallet.currency}
                       </option>
                     ))}
@@ -333,9 +328,9 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
               </div>
               <DialogFooter>
                 <Button 
-                  variant="ghost"
+                  variant="outline" 
                   onClick={() => setIsTransferring(false)}
-                  className="text-white/70 hover:text-white hover:bg-white/10"
+                  className="border-white/20 text-white hover:bg-white/10 bg-transparent"
                 >
                   Anuluj
                 </Button>
@@ -387,7 +382,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
           {/* Wallets */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Twoje portfele</h3>
-            <ScrollArea className="h-full custom-scrollbar">
+            <ScrollArea className="h-full [&>div>div]:!block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
               <div className="space-y-4 pr-4">
                 {wallets.map((wallet) => (
                   <div key={wallet.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
@@ -430,21 +425,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
                     </div>
 
                     <div className="bg-white/5 rounded-xl p-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="text-white/60 text-xs">Adres portfela:</div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => copyToClipboard(wallet.address)}
-                          className="h-6 px-2 text-white/60 hover:text-white hover:bg-white/10"
-                        >
-                          {copiedWallet === wallet.address ? (
-                            <Check size={12} className="text-green-400" />
-                          ) : (
-                            <Copy size={12} />
-                          )}
-                        </Button>
-                      </div>
+                      <div className="text-white/60 text-xs mb-1">Adres portfela:</div>
                       <div className="text-white/80 text-sm font-mono break-all">{wallet.address}</div>
                     </div>
                   </div>
@@ -456,7 +437,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
           {/* Transactions */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Ostatnie transakcje</h3>
-            <ScrollArea className="h-full custom-scrollbar">
+            <ScrollArea className="h-full [&>div>div]:!block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
               <div className="space-y-3 pr-4">
                 {transactions.map((transaction) => (
                   <div key={transaction.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-200">
