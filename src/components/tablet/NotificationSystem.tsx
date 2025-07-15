@@ -51,6 +51,40 @@ const NotificationSystem = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { toast } = useToast();
 
+  // iPhone-style notification sound
+  const playNotificationSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Create a more iPhone-like tri-tone sound
+      const createTone = (frequency: number, startTime: number, duration: number) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, startTime);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
+        
+        oscillator.start(startTime);
+        oscillator.stop(startTime + duration);
+      };
+      
+      const now = audioContext.currentTime;
+      createTone(1318.51, now, 0.2);        // E6
+      createTone(1174.66, now + 0.15, 0.2); // D6
+      createTone(987.77, now + 0.3, 0.4);   // B5
+      
+    } catch (e) {
+      console.log('Audio not supported');
+    }
+  };
+
   // Symulacja nowych powiadomień
   useEffect(() => {
     const interval = setInterval(() => {
@@ -79,27 +113,8 @@ const NotificationSystem = () => {
             variant: newNotification.type === 'error' ? 'destructive' : 'default',
           });
           
-          // Odtwórz dźwięk dzwoneczka
-          try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-            oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-            oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
-            
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
-            
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.5);
-          } catch (e) {
-            console.log('Audio not supported');
-          }
+          // Play iPhone-style sound
+          playNotificationSound();
         }
       }
     }, 10000);
@@ -168,7 +183,7 @@ const NotificationSystem = () => {
 
       {/* Notifications Panel */}
       {showNotifications && (
-        <div className="absolute top-full right-0 mt-2 w-80 bg-black/90 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-50">
+        <div className="absolute top-full right-0 mt-2 w-80 bg-black/95 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-50 max-h-96">
           <div className="p-3 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
             <div className="flex items-center justify-between">
               <h3 className="text-white font-medium text-sm">Powiadomienia</h3>

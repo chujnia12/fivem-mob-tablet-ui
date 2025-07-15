@@ -7,7 +7,10 @@ import {
   ShoppingBag, 
   Settings, 
   BarChart3,
-  Grid3X3
+  Grid3X3,
+  Briefcase,
+  Bitcoin,
+  Crosshair
 } from 'lucide-react';
 import { AppType } from '../../pages/TabletOS';
 
@@ -19,9 +22,10 @@ interface HomeScreenProps {
     balance: number;
   };
   onOpenApp: (app: AppType) => void;
+  installedApps: string[];
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp, installedApps }) => {
   // Domyślnie dostępne aplikacje
   const defaultApps = [
     { id: 'finance', name: 'Finanse', icon: DollarSign, color: 'bg-green-600' },
@@ -33,6 +37,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
     { id: 'apps', name: 'Apps', icon: Grid3X3, color: 'bg-cyan-600' },
   ];
 
+  // Płatne aplikacje
+  const paidApps = [
+    { id: 'zlecenia', name: 'Zlecenia', icon: Briefcase, color: 'bg-red-600' },
+    { id: 'kryptowaluty', name: 'Krypto', icon: Bitcoin, color: 'bg-yellow-600' },
+    { id: 'napady', name: 'Napady', icon: Crosshair, color: 'bg-pink-600' },
+  ];
+
+  // Pokaż wszystkie zainstalowane aplikacje
+  const allApps = [
+    ...defaultApps,
+    ...paidApps.filter(app => installedApps.includes(app.id))
+  ];
+
   return (
     <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black relative">
       {/* Dark minimalist background */}
@@ -41,7 +58,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
       {/* Apps Grid - iPad style */}
       <div className="relative z-10 p-12 h-full flex flex-col justify-center">
         <div className="grid grid-cols-4 gap-8 max-w-4xl mx-auto">
-          {defaultApps.map((app) => (
+          {allApps.map((app) => (
             <button
               key={app.id}
               onClick={() => onOpenApp(app.id as AppType)}

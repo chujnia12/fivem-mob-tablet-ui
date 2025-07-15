@@ -18,6 +18,7 @@ export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders'
 
 const TabletOS = () => {
   const [currentApp, setCurrentApp] = useState<AppType>('home');
+  const [installedApps, setInstalledApps] = useState<AppType[]>(['finance', 'members', 'transactions', 'orders', 'settings', 'stats', 'apps']);
   
   // TODO: Replace with database integration
   // Fetch from addon_account_data table for balance
@@ -26,7 +27,8 @@ const TabletOS = () => {
     name: 'Ballas',
     rank: 3,
     id: 2,
-    balance: 12329713 // TODO: Sync with addon_account_data
+    balance: 12329713, // TODO: Sync with addon_account_data
+    crypto_balance: 15.75 // TODO: Sync with crypto_wallet table
   });
 
   const openApp = (app: AppType) => {
@@ -35,6 +37,12 @@ const TabletOS = () => {
 
   const goHome = () => {
     setCurrentApp('home');
+  };
+
+  const installApp = (app: AppType) => {
+    if (!installedApps.includes(app)) {
+      setInstalledApps(prev => [...prev, app]);
+    }
   };
 
   const getRankName = (rankNumber: number) => {
@@ -65,15 +73,15 @@ const TabletOS = () => {
       case 'stats':
         return <StatsApp orgData={orgData} onHome={goHome} />;
       case 'zlecenia':
-        return <ZleceniaApp orgData={orgData} onHome={goHome} />;
+        return installedApps.includes('zlecenia') ? <ZleceniaApp orgData={orgData} onHome={goHome} /> : <div>App not installed</div>;
       case 'kryptowaluty':
-        return <KryptowalutyApp orgData={orgData} onHome={goHome} />;
+        return installedApps.includes('kryptowaluty') ? <KryptowalutyApp orgData={orgData} onHome={goHome} /> : <div>App not installed</div>;
       case 'apps':
-        return <AppsApp orgData={orgData} onHome={goHome} />;
+        return <AppsApp orgData={orgData} onHome={goHome} onInstall={installApp} installedApps={installedApps} />;
       case 'napady':
-        return <NapadyApp orgData={orgData} onHome={goHome} />;
+        return installedApps.includes('napady') ? <NapadyApp orgData={orgData} onHome={goHome} /> : <div>App not installed</div>;
       default:
-        return <HomeScreen orgData={orgData} onOpenApp={openApp} />;
+        return <HomeScreen orgData={orgData} onOpenApp={openApp} installedApps={installedApps} />;
     }
   };
 
@@ -115,7 +123,7 @@ const TabletOS = () => {
             
             {/* Back Button - Top Left */}
             {currentApp !== 'home' && (
-              <div className="absolute top-20 left-6 z-50">
+              <div className="absolute top-20 left-6 z-40">
                 <button
                   onClick={goHome}
                   className="bg-black/40 backdrop-blur-md border border-white/20 rounded-2xl p-3 hover:bg-black/60 transition-all duration-200 shadow-2xl"
@@ -126,13 +134,13 @@ const TabletOS = () => {
             )}
             
             {/* App Content */}
-            <div className="h-[calc(100%-12rem)]">
+            <div className="h-[calc(100%-8rem)] pt-4">
               {renderCurrentApp()}
             </div>
 
             {/* Organization Info Bar - Bottom - Only on home screen */}
             {currentApp === 'home' && (
-              <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
+              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2">
                 <div className="bg-black/60 backdrop-blur-sm rounded-xl px-6 py-2 border border-white/20">
                   <div className="flex items-center gap-4 text-white text-sm">
                     <span className="text-white/60">Organizacja:</span>
@@ -144,10 +152,8 @@ const TabletOS = () => {
               </div>
             )}
 
-            {/* Home Button - Below organization info when on home, or at bottom when in apps */}
-            <div className={`absolute left-1/2 transform -translate-x-1/2 ${
-              currentApp === 'home' ? 'bottom-4' : 'bottom-8'
-            }`}>
+            {/* Home Button */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
               <button
                 onClick={goHome}
                 className="w-36 h-1.5 bg-gradient-to-r from-white/60 via-white/90 to-white/60 rounded-full hover:from-white/80 hover:via-white hover:to-white/80 transition-all duration-300 hover:scale-110 active:scale-95 shadow-xl"

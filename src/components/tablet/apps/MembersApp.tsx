@@ -1,10 +1,27 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Search, Users, UserPlus, Settings, Shield, Crown, User, MoreVertical, Phone, Mail, Copy } from 'lucide-react';
+import { ArrowLeft, Search, Users, UserPlus, Settings, Shield, Crown, User, MoreVertical, Phone, Mail, Copy, UserMinus, TrendingUp } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../../ui/dialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../ui/alert-dialog";
 
 interface MembersAppProps {
   orgData: {
@@ -16,6 +33,12 @@ interface MembersAppProps {
 const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [showHireDialog, setShowHireDialog] = useState(false);
+  const [showMemberActions, setShowMemberActions] = useState<string | null>(null);
+  const [showPromoteDialog, setShowPromoteDialog] = useState(false);
+  const [showFireDialog, setShowFireDialog] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<any>(null);
+  const [playerIdToHire, setPlayerIdToHire] = useState('');
   const { toast } = useToast();
 
   // TODO: Fetch from database - users table joined with jobs table
@@ -97,7 +120,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
     const matchesFilter = selectedFilter === 'all' || 
       (selectedFilter === 'online' && member.status === 'online') ||
       (selectedFilter === 'offline' && member.status === 'offline') ||
-      (selectedFilter === 'management' && member.grade >= 5);
+      (selectedFilter === 'zarzad' && member.grade >= 5);
     
     return matchesSearch && matchesFilter;
   });
@@ -128,6 +151,55 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
     });
   };
 
+  const handleHireMember = () => {
+    if (!playerIdToHire.trim()) {
+      toast({
+        title: "Błąd",
+        description: "Wprowadź ID gracza",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // TODO: Send hiring request to player
+    toast({
+      title: "Wysłano zaproszenie",
+      description: `Zaproszenie do organizacji zostało wysłane do gracza ${playerIdToHire}`,
+    });
+    
+    setShowHireDialog(false);
+    setPlayerIdToHire('');
+  };
+
+  const handleMemberAction = (member: any, action: string) => {
+    setSelectedMember(member);
+    setShowMemberActions(null);
+    
+    if (action === 'promote') {
+      setShowPromoteDialog(true);
+    } else if (action === 'fire') {
+      setShowFireDialog(true);
+    }
+  };
+
+  const handlePromoteMember = () => {
+    toast({
+      title: "Awansowano członka",
+      description: `${selectedMember?.name} został awansowany`,
+    });
+    setShowPromoteDialog(false);
+    setSelectedMember(null);
+  };
+
+  const handleFireMember = () => {
+    toast({
+      title: "Wyrzucono członka",
+      description: `${selectedMember?.name} został wyrzucony z organizacji`,
+    });
+    setShowFireDialog(false);
+    setSelectedMember(null);
+  };
+
   return (
     <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black text-white">
       {/* Header */}
@@ -146,7 +218,10 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
             <h1 className="text-xl font-medium">Zarządzanie Członkami</h1>
           </div>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+        <Button 
+          onClick={() => setShowHireDialog(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+        >
           <UserPlus size={16} className="mr-2" />
           ZATRUDNIJ
         </Button>
@@ -173,7 +248,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
                 { id: 'all', name: 'Wszyscy' },
                 { id: 'online', name: 'Online' },
                 { id: 'offline', name: 'Offline' },
-                { id: 'management', name: 'Kierownictwo' }
+                { id: 'zarzad', name: 'Zarząd' }
               ].map((filter) => (
                 <Button
                   key={filter.id}
@@ -214,13 +289,36 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
                           <p className="text-white/60 text-sm">ID: {member.id}</p>
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-white/60 hover:bg-white/10 rounded-full p-2"
-                      >
-                        <MoreVertical size={16} />
-                      </Button>
+                      <div className="relative">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowMemberActions(showMemberActions === member.id ? null : member.id)}
+                          className="text-white/60 hover:bg-white/10 rounded-full p-2"
+                        >
+                          <MoreVertical size={16} />
+                        </Button>
+                        
+                        {/* Action Menu */}
+                        {showMemberActions === member.id && (
+                          <div className="absolute right-0 top-full mt-1 bg-black/90 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl p-2 min-w-48 z-50">
+                            <button
+                              onClick={() => handleMemberAction(member, 'promote')}
+                              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg transition-colors"
+                            >
+                              <TrendingUp size={16} className="text-green-400" />
+                              Zmień rangę
+                            </button>
+                            <button
+                              onClick={() => handleMemberAction(member, 'fire')}
+                              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-white hover:bg-white/10 rounded-lg transition-colors"
+                            >
+                              <UserMinus size={16} className="text-red-400" />
+                              Wyrzuć
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-medium border ${getRankColor(member.rank)} mb-4`}>
@@ -293,6 +391,141 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
           </ScrollArea>
         </div>
       </div>
+
+      {/* Hire Dialog */}
+      <Dialog open={showHireDialog} onOpenChange={setShowHireDialog}>
+        <DialogContent className="bg-gray-900 border-white/20 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Zatrudnij nowego członka</DialogTitle>
+            <DialogDescription className="text-white/80">
+              Wprowadź ID gracza, którego chcesz zatrudnić do organizacji.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <Input
+              placeholder="ID gracza (np. 12345)"
+              value={playerIdToHire}
+              onChange={(e) => setPlayerIdToHire(e.target.value)}
+              className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowHireDialog(false)}
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              Anuluj
+            </Button>
+            <Button
+              onClick={handleHireMember}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Wyślij zaproszenie
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Promote Dialog */}
+      <Dialog open={showPromoteDialog} onOpenChange={setShowPromoteDialog}>
+        <DialogContent className="bg-gray-900 border-white/20 text-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Zmień rangę członka</DialogTitle>
+            <DialogDescription className="text-white/80">
+              Zmień rangę dla {selectedMember?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <div className="flex items-center gap-4 mb-4">
+                <img
+                  src={selectedMember?.avatar}
+                  alt={selectedMember?.name}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <h3 className="font-medium">{selectedMember?.name}</h3>
+                  <p className="text-white/60 text-sm">Aktualna ranga: {selectedMember?.rank}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm text-white/80">Nowa ranga:</label>
+                <select className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white">
+                  <option value="1">CZŁONEK (1)</option>
+                  <option value="2">CZŁONEK (2)</option>
+                  <option value="3">STARSZY CZŁONEK (3)</option>
+                  <option value="4">STARSZY CZŁONEK (4)</option>
+                  <option value="5">ZASTĘPCA (5)</option>
+                  <option value="6">ZASTĘPCA (6)</option>
+                  <option value="7">SZEF (7)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPromoteDialog(false)}
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              Anuluj
+            </Button>
+            <Button
+              onClick={handlePromoteMember}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Awansuj
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Fire Dialog */}
+      <AlertDialog open={showFireDialog} onOpenChange={setShowFireDialog}>
+        <AlertDialogContent className="bg-gray-900 border-white/20 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl">Wyrzuć członka</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/80">
+              Czy na pewno chcesz wyrzucić {selectedMember?.name} z organizacji? Tej operacji nie można cofnąć.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          
+          <div className="py-4">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+              <div className="flex items-center gap-4">
+                <img
+                  src={selectedMember?.avatar}
+                  alt={selectedMember?.name}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <h3 className="font-medium text-red-400">{selectedMember?.name}</h3>
+                  <p className="text-white/60 text-sm">ID: {selectedMember?.id}</p>
+                  <p className="text-white/60 text-sm">Ranga: {selectedMember?.rank}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/20 text-white hover:bg-white/10">
+              Anuluj
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleFireMember}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Wyrzuć
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
