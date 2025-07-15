@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Wifi, Battery, Volume2 } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
@@ -15,12 +16,23 @@ import OrdersApp from '../components/tablet/apps/OrdersApp';
 import KryptowalutyApp from '../components/tablet/apps/KryptowalutyApp';
 import TrackerApp from '../components/tablet/apps/TrackerApp';
 
+export type AppType = 'apps' | 'finance' | 'members' | 'napady' | 'notes' | 'settings' | 'stats' | 'transactions' | 'zlecenia' | 'orders' | 'kryptowaluty' | 'tracker';
+
 interface OrgData {
   name: string;
   rank: number;
   id: number;
   balance: number;
   crypto_balance: number;
+}
+
+interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  read: boolean;
 }
 
 const TabletOS = () => {
@@ -32,12 +44,12 @@ const TabletOS = () => {
     balance: 1500000,
     crypto_balance: 25.47
   });
-  const [installedApps, setInstalledApps] = useState<string[]>([
+  const [installedApps, setInstalledApps] = useState<AppType[]>([
     'apps', 'finance', 'members', 'napady', 'notes', 'settings', 
     'stats', 'transactions', 'zlecenia', 'orders', 'kryptowaluty'
   ]);
 
-  const [notifications, setNotifications] = useState([
+  const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
       title: 'Nowy napad dostępny',
@@ -48,7 +60,7 @@ const TabletOS = () => {
     }
   ]);
 
-  const purchaseApp = (appId: string, price: number): boolean => {
+  const purchaseApp = (appId: AppType, price: number): boolean => {
     if (orgData.crypto_balance >= price) {
       setOrgData(prev => ({
         ...prev,
@@ -56,7 +68,7 @@ const TabletOS = () => {
       }));
       setInstalledApps(prev => [...prev, appId]);
       
-      const newNotification = {
+      const newNotification: Notification = {
         id: Date.now().toString(),
         title: 'Aplikacja zakupiona',
         message: `Pomyślnie zakupiono aplikację`,
@@ -80,14 +92,6 @@ const TabletOS = () => {
       return true;
     }
     return false;
-  };
-
-  const updateBalance = (newBalance: number) => {
-    setOrgData(prev => ({ ...prev, balance: newBalance }));
-  };
-
-  const updateCryptoBalance = (newBalance: number) => {
-    setOrgData(prev => ({ ...prev, crypto_balance: newBalance }));
   };
 
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -124,9 +128,9 @@ const TabletOS = () => {
 
     switch (currentApp) {
       case 'apps':
-        return <AppsApp {...commonProps} installedApps={installedApps} onPurchaseApp={purchaseApp} />;
+        return <AppsApp {...commonProps} installedApps={installedApps} onPurchase={purchaseApp} onInstall={(app) => setInstalledApps(prev => [...prev, app])} onOpenApp={setCurrentApp} purchasedApps={installedApps} />;
       case 'finance':
-        return <FinanceApp {...commonProps} onUpdateBalance={updateBalance} onUpdateCryptoBalance={updateCryptoBalance} />;
+        return <FinanceApp {...commonProps} />;
       case 'members':
         return <MembersApp {...commonProps} />;
       case 'napady':
@@ -151,7 +155,7 @@ const TabletOS = () => {
         return (
           <HomeScreen 
             orgData={orgData}
-            onAppSelect={setCurrentApp}
+            onOpenApp={setCurrentApp}
             installedApps={installedApps}
           />
         );
@@ -171,8 +175,6 @@ const TabletOS = () => {
             <span className="text-sm font-medium">{formatTime(currentTime)}</span>
             <div className="flex items-center gap-2">
               <Wifi size={16} />
-              <Battery size={16} />
-              <Volume2 size={16} />
             </div>
           </div>
         </div>
