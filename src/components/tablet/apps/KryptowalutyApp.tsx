@@ -1,155 +1,191 @@
+
 import React, { useState } from 'react';
-import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Minus, Wallet, BarChart3, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, RefreshCw, DollarSign, CreditCard, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter
+} from '../../ui/dialog';
 
 interface KryptowalutyAppProps {
   orgData: {
     name: string;
+    crypto_balance: number;
   };
   onHome: () => void;
 }
 
 const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) => {
-  const [selectedCoin, setSelectedCoin] = useState('LCOIN');
-  const [tradeType, setTradeType] = useState('buy');
-  const [tradeAmount, setTradeAmount] = useState('');
-  const [activeTab, setActiveTab] = useState('portfolio');
-  const [depositAmount, setDepositAmount] = useState('');
+  const [showBalance, setShowBalance] = useState(true);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [purchaseAmount, setPurchaseAmount] = useState('');
+  const [selectedCrypto, setSelectedCrypto] = useState('LCOIN');
   const [transferAmount, setTransferAmount] = useState('');
   const [transferWallet, setTransferWallet] = useState('');
-  const [refreshing, setRefreshing] = useState(false);
+  const [transferCrypto, setTransferCrypto] = useState('LCOIN');
 
-  // TODO: Fetch from database - crypto_portfolio, crypto_prices tables
-  // Fikcyjne kryptowaluty inspirowane GTA 5
-  const cryptoData = [
+  // TODO: Fetch from database - crypto_wallets table
+  const [wallets, setWallets] = useState([
     {
-      symbol: 'LCOIN',
-      name: 'Liberty Coin',
-      price: 2847.50,
-      change24h: 3.21,
-      owned: 5.2847,
-      value: 15043.82,
+      id: 'wallet_1',
+      address: 'LC1A2B3C4D5E6F7G8H9I0J',
+      currency: 'LCOIN',
+      balance: 15.47,
       icon: '🏛️',
-      walletNumber: 'LC-4578-9021-3456'
-    },
-    {
-      symbol: 'VCASH',
-      name: 'Vice Cash',
-      price: 1542.15,
-      change24h: -2.14,
-      owned: 8.1,
-      value: 12491.42,
-      icon: '🌴',
-      walletNumber: 'VC-7823-1456-9087'
-    },
-    {
-      symbol: 'SANCOIN',
-      name: 'San Andreas Coin',
-      price: 567.89,
-      change24h: 5.67,
-      owned: 15.2,
-      value: 8631.93,
-      icon: '🏔️',
-      walletNumber: 'SA-2341-7865-4321'
-    },
-    {
-      symbol: 'NCCOIN',
-      name: 'North Carolina Coin',
-      price: 234.56,
-      change24h: -1.23,
-      owned: 25.8,
-      value: 6051.65,
-      icon: '🏭',
-      walletNumber: 'NC-9876-5432-1098'
-    },
-    {
-      symbol: 'BULLCOIN',
-      name: 'Bull Shark Coin',
-      price: 89.34,
-      change24h: 8.45,
-      owned: 67.2,
-      value: 6003.65,
-      icon: '🦈',
-      walletNumber: 'BS-1357-9246-8024'
-    },
-    {
-      symbol: 'LSCOIN',
       name: 'Los Santos Coin',
-      price: 45.67,
-      change24h: -3.45,
-      owned: 123.4,
-      value: 5635.68,
-      icon: '🌆',
-      walletNumber: 'LS-4682-1359-7531'
+      price_usd: 1250.30,
+      change_24h: +5.2
+    },
+    {
+      id: 'wallet_2',
+      address: 'VC9Z8Y7X6W5V4U3T2S1R0Q',
+      currency: 'VCASH',
+      balance: 8.23,
+      icon: '🌴',
+      name: 'Vice Cash',
+      price_usd: 890.75,
+      change_24h: -2.1
+    },
+    {
+      id: 'wallet_3',
+      address: 'SC5M4N3B2V1C6X7Z8A9S0D',
+      currency: 'SANCOIN',
+      balance: 32.91,
+      icon: '🏔️',
+      name: 'San Andreas Coin',
+      price_usd: 156.80,
+      change_24h: +12.4
     }
-  ];
+  ]);
 
-  const priceHistory = [
-    { time: '00:00', LCOIN: 2650, VCASH: 1456, SANCOIN: 534 },
-    { time: '04:00', LCOIN: 2720, VCASH: 1487, SANCOIN: 545 },
-    { time: '08:00', LCOIN: 2780, VCASH: 1512, SANCOIN: 558 },
-    { time: '12:00', LCOIN: 2820, VCASH: 1534, SANCOIN: 562 },
-    { time: '16:00', LCOIN: 2830, VCASH: 1528, SANCOIN: 560 },
-    { time: '20:00', LCOIN: 2847, VCASH: 1542, SANCOIN: 567 }
-  ];
-
-  const transactions = [
+  // TODO: Fetch from database - crypto_transactions table
+  const [transactions, setTransactions] = useState([
     {
-      id: 'TX001',
-      type: 'buy',
-      symbol: 'LCOIN',
-      amount: 0.5,
-      price: 2750,
-      total: 1375,
-      timestamp: '2024-01-15 14:30'
+      id: 'tx1',
+      type: 'purchase',
+      amount: 2.5,
+      currency: 'LCOIN',
+      date: '2025-01-15T14:30:00',
+      status: 'completed',
+      from: 'Karta bankowa',
+      to: 'LC1A2B3C4D5E6F7G8H9I0J'
     },
     {
-      id: 'TX002',
-      type: 'sell',
-      symbol: 'VCASH',
-      amount: 2.0,
-      price: 1520,
-      total: 3040,
-      timestamp: '2024-01-15 12:15'
+      id: 'tx2',
+      type: 'transfer',
+      amount: 1.2,
+      currency: 'VCASH',
+      date: '2025-01-15T12:15:00',
+      status: 'completed',
+      from: 'VC9Z8Y7X6W5V4U3T2S1R0Q',
+      to: 'VC1A2B3C4D5E6F7G8H9I0J'
     },
     {
-      id: 'TX003',
-      type: 'buy',
-      symbol: 'SANCOIN',
+      id: 'tx3',
+      type: 'receive',
       amount: 5.0,
-      price: 540,
-      total: 2700,
-      timestamp: '2024-01-15 10:45'
+      currency: 'SANCOIN',
+      date: '2025-01-14T18:45:00',
+      status: 'completed',
+      from: 'SC9Z8Y7X6W5V4U3T2S1R0Q',
+      to: 'SC5M4N3B2V1C6X7Z8A9S0D'
     }
-  ];
+  ]);
 
-  const totalPortfolioValue = cryptoData.reduce((sum, coin) => sum + coin.value, 0);
-  const selectedCoinData = cryptoData.find(coin => coin.symbol === selectedCoin);
+  const totalBalance = wallets.reduce((sum, wallet) => sum + (wallet.balance * wallet.price_usd), 0);
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    // TODO: Fetch latest crypto prices from database
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setRefreshing(false);
-  };
+  const handlePurchase = () => {
+    if (!purchaseAmount || parseFloat(purchaseAmount) <= 0) return;
 
-  const handleDeposit = () => {
-    if (depositAmount && selectedCoinData) {
-      // TODO: Process deposit to database
-      alert(`Wpłacono ${depositAmount} USD na portfel ${selectedCoinData.walletNumber}`);
-      setDepositAmount('');
-    }
+    const amount = parseFloat(purchaseAmount);
+    const wallet = wallets.find(w => w.currency === selectedCrypto);
+    if (!wallet) return;
+
+    // Simulate purchase
+    setWallets(prev => prev.map(w => 
+      w.currency === selectedCrypto 
+        ? { ...w, balance: w.balance + amount }
+        : w
+    ));
+
+    // Add transaction
+    const newTransaction = {
+      id: `tx_${Date.now()}`,
+      type: 'purchase' as const,
+      amount: amount,
+      currency: selectedCrypto,
+      date: new Date().toISOString(),
+      status: 'completed' as const,
+      from: 'Karta bankowa',
+      to: wallet.address
+    };
+
+    setTransactions(prev => [newTransaction, ...prev]);
+    setPurchaseAmount('');
+    setIsPurchasing(false);
   };
 
   const handleTransfer = () => {
-    if (transferAmount && transferWallet && selectedCoinData) {
-      // TODO: Process transfer to database
-      alert(`Przekazano ${transferAmount} ${selectedCoin} na portfel ${transferWallet}`);
-      setTransferAmount('');
-      setTransferWallet('');
+    if (!transferAmount || !transferWallet || parseFloat(transferAmount) <= 0) return;
+
+    const amount = parseFloat(transferAmount);
+    const wallet = wallets.find(w => w.currency === transferCrypto);
+    if (!wallet || wallet.balance < amount) return;
+
+    // Simulate transfer
+    setWallets(prev => prev.map(w => 
+      w.currency === transferCrypto 
+        ? { ...w, balance: w.balance - amount }
+        : w
+    ));
+
+    // Add transaction
+    const newTransaction = {
+      id: `tx_${Date.now()}`,
+      type: 'transfer' as const,
+      amount: amount,
+      currency: transferCrypto,
+      date: new Date().toISOString(),
+      status: 'completed' as const,
+      from: wallet.address,
+      to: transferWallet
+    };
+
+    setTransactions(prev => [newTransaction, ...prev]);
+    setTransferAmount('');
+    setTransferWallet('');
+    setIsTransferring(false);
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('pl-PL', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const getTransactionIcon = (type: string) => {
+    switch (type) {
+      case 'purchase': return <CreditCard size={16} className="text-green-400" />;
+      case 'transfer': return <ArrowUpDown size={16} className="text-blue-400" />;
+      case 'receive': return <TrendingUp size={16} className="text-purple-400" />;
+      default: return <Bitcoin size={16} className="text-yellow-400" />;
+    }
+  };
+
+  const getTransactionColor = (type: string) => {
+    switch (type) {
+      case 'purchase': return 'text-green-400';
+      case 'receive': return 'text-green-400';
+      case 'transfer': return 'text-red-400';
+      default: return 'text-white';
     }
   };
 
@@ -168,397 +204,279 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
           </Button>
           <div className="flex items-center gap-3">
             <Bitcoin className="text-yellow-400" size={24} />
-            <h1 className="text-xl font-medium">Kryptowaluty</h1>
+            <h1 className="text-xl font-medium">Portfel Kryptowalut</h1>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
-            <span className="text-white/60 text-sm">Portfolio: </span>
-            <span className="text-green-400 font-medium">${totalPortfolioValue.toLocaleString()}</span>
-          </div>
-          <Button 
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl"
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            className="text-white/60 hover:text-white border border-white/20 rounded-xl hover:bg-white/10"
           >
-            <RefreshCw size={16} className={`mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'ODŚWIEŻANIE...' : 'ODŚWIEŻ'}
+            <RefreshCw size={16} className="mr-2" />
+            Odśwież
           </Button>
-        </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex border-b border-white/10">
-        <button
-          onClick={() => setActiveTab('portfolio')}
-          className={`px-6 py-3 text-sm font-medium transition-colors ${
-            activeTab === 'portfolio'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-white/60 hover:text-white'
-          }`}
-        >
-          Portfolio
-        </button>
-        <button
-          onClick={() => setActiveTab('wallet')}
-          className={`px-6 py-3 text-sm font-medium transition-colors ${
-            activeTab === 'wallet'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-white/60 hover:text-white'
-          }`}
-        >
-          <Wallet size={16} className="mr-2 inline" />
-          Portfel
-        </button>
-        <button
-          onClick={() => setActiveTab('trading')}
-          className={`px-6 py-3 text-sm font-medium transition-colors ${
-            activeTab === 'trading'
-              ? 'text-yellow-400 border-b-2 border-yellow-400'
-              : 'text-white/60 hover:text-white'
-          }`}
-        >
-          Handel
-        </button>
-      </div>
-
-      <ScrollArea className="h-[calc(100%-9rem)] custom-scrollbar">
-        <div className="p-6 space-y-6">
-          {activeTab === 'portfolio' && (
-            <>
-              {/* Portfolio Overview */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                <h3 className="text-lg font-medium mb-4">Twoje Portfolio</h3>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-                  {cryptoData.map((coin) => (
-                    <div 
-                      key={coin.symbol}
-                      onClick={() => setSelectedCoin(coin.symbol)}
-                      className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
-                        selectedCoin === coin.symbol 
-                          ? 'bg-white/10 border-yellow-500/30' 
-                          : 'bg-white/5 border-white/10 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="text-2xl">{coin.icon}</div>
-                          <div>
-                            <div className="font-medium text-sm">{coin.symbol}</div>
-                            <div className="text-white/60 text-xs">{coin.name}</div>
-                          </div>
-                        </div>
-                        <div className={`flex items-center gap-1 text-xs ${
-                          coin.change24h >= 0 ? 'text-green-400' : 'text-red-400'
-                        }`}>
-                          {coin.change24h >= 0 ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-                          {Math.abs(coin.change24h)}%
-                        </div>
-                      </div>
-                      <div className="text-sm">
-                        <div className="text-white/80">${coin.price.toLocaleString()}</div>
-                        <div className="text-white/60">{coin.owned} {coin.symbol}</div>
-                        <div className="text-green-400 font-medium">${coin.value.toLocaleString()}</div>
-                      </div>
-                    </div>
-                  ))}
+          <Dialog open={isPurchasing} onOpenChange={setIsPurchasing}>
+            <DialogTrigger asChild>
+              <Button className="bg-green-600 hover:bg-green-700 text-white rounded-xl">
+                <CreditCard size={16} className="mr-2" />
+                Kup Krypto
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-900/95 backdrop-blur-sm border-white/20 text-white">
+              <DialogHeader>
+                <DialogTitle className="text-white">Kup Kryptowalutę</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-white/80">Kryptowaluta</label>
+                  <select
+                    value={selectedCrypto}
+                    onChange={(e) => setSelectedCrypto(e.target.value)}
+                    className="w-full mt-1 p-2 bg-white/10 border border-white/20 rounded-md text-white"
+                  >
+                    {wallets.map(wallet => (
+                      <option key={wallet.currency} value={wallet.currency}>
+                        {wallet.icon} {wallet.name} ({wallet.currency})
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-
-              {/* Price Chart */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                <h3 className="text-lg font-medium mb-4">Wykres Cen - {selectedCoin}</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={priceHistory}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="time" stroke="#9CA3AF" />
-                    <YAxis stroke="#9CA3AF" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#1F2937', 
-                        border: '1px solid #374151',
-                        borderRadius: '8px'
-                      }} 
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey={selectedCoin} 
-                      stroke="#EAB308" 
-                      strokeWidth={2}
-                      dot={{ fill: '#EAB308', strokeWidth: 2, r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'wallet' && (
-            <div className="space-y-6">
-              {/* Wallet Operations */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                <h3 className="text-lg font-medium mb-4">Operacje Portfelowe</h3>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Deposit Section */}
-                  <div className="space-y-4">
-                    <h4 className="text-md font-medium text-yellow-400">Wpłata na Portfel</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm text-white/60 mb-1 block">Wybierz Portfel</label>
-                        <select 
-                          value={selectedCoin}
-                          onChange={(e) => setSelectedCoin(e.target.value)}
-                          className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
-                        >
-                          {cryptoData.map(coin => (
-                            <option key={coin.symbol} value={coin.symbol} className="bg-gray-900">
-                              {coin.symbol} - {coin.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      
-                      {selectedCoinData && (
-                        <div className="bg-white/5 rounded-xl p-3">
-                          <div className="text-sm text-white/60 mb-1">Numer Portfela:</div>
-                          <div className="font-mono text-white">{selectedCoinData.walletNumber}</div>
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="text-sm text-white/60 mb-1 block">Kwota (USD)</label>
-                        <Input
-                          placeholder="0.00"
-                          value={depositAmount}
-                          onChange={(e) => setDepositAmount(e.target.value)}
-                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
-                        />
-                      </div>
-
-                      <Button 
-                        onClick={handleDeposit}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl"
-                      >
-                        <Plus size={16} className="mr-2" />
-                        WPŁAĆ
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Transfer Section */}
-                  <div className="space-y-4">
-                    <h4 className="text-md font-medium text-blue-400">Transfer Między Portfelami</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm text-white/60 mb-1 block">Ilość do Transferu</label>
-                        <Input
-                          placeholder="0.00"
-                          value={transferAmount}
-                          onChange={(e) => setTransferAmount(e.target.value)}
-                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="text-sm text-white/60 mb-1 block">Docelowy Portfel</label>
-                        <Input
-                          placeholder="XX-0000-0000-0000"
-                          value={transferWallet}
-                          onChange={(e) => setTransferWallet(e.target.value)}
-                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
-                        />
-                      </div>
-
-                      <Button 
-                        onClick={handleTransfer}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
-                      >
-                        <ArrowUpDown size={16} className="mr-2" />
-                        PRZEKAŻ
-                      </Button>
-                    </div>
-                  </div>
+                <div>
+                  <label className="text-sm text-white/80">Ilość</label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={purchaseAmount}
+                    onChange={(e) => setPurchaseAmount(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 mt-1"
+                  />
                 </div>
-              </div>
-
-              {/* Wallet Summary */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium">Portfele Kryptowalut</h3>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-green-400">
-                      ${totalPortfolioValue.toLocaleString()}
-                    </div>
-                    <div className="text-white/60 text-sm">Łączna wartość</div>
-                  </div>
-                </div>
-
-                <div className="grid gap-4">
-                  {cryptoData.map((coin) => (
-                    <div key={coin.symbol} className="bg-white/5 rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <div className="text-2xl">{coin.icon}</div>
-                          <div>
-                            <div className="font-medium">{coin.name}</div>
-                            <div className="text-white/60 text-sm">{coin.symbol}</div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">{coin.owned} {coin.symbol}</div>
-                          <div className="text-green-400 text-sm">${coin.value.toLocaleString()}</div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-white/40 font-mono">{coin.walletNumber}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Recent Transactions */}
-              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-                <h3 className="text-lg font-medium mb-4">Historia Transakcji</h3>
-                <div className="space-y-3">
-                  {transactions.map((tx) => (
-                    <div key={tx.id} className="bg-white/5 rounded-xl p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`px-3 py-1 rounded-lg text-xs font-medium ${
-                          tx.type === 'buy' 
-                            ? 'bg-green-500/20 text-green-400' 
-                            : 'bg-red-500/20 text-red-400'
-                        }`}>
-                          {tx.type === 'buy' ? 'KUPNO' : 'SPRZEDAŻ'}
-                        </div>
-                        <div>
-                          <div className="font-medium">{tx.symbol}</div>
-                          <div className="text-white/60 text-sm">{tx.timestamp}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-medium">{tx.amount} {tx.symbol}</div>
-                        <div className="text-white/60 text-sm">${tx.total.toLocaleString()}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'trading' && (
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-              <h3 className="text-lg font-medium mb-4">Panel Handlowy</h3>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Trading Form */}
-                <div className="space-y-4">
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant={tradeType === 'buy' ? "default" : "outline"}
-                      onClick={() => setTradeType('buy')}
-                      className={`flex-1 ${tradeType === 'buy' 
-                        ? 'bg-green-600 hover:bg-green-700 text-white' 
-                        : 'border-white/20 text-white/80 hover:bg-white/10 bg-transparent'} rounded-xl`}
-                    >
-                      <Plus size={14} className="mr-1" />
-                      KUPUJ
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={tradeType === 'sell' ? "default" : "outline"}
-                      onClick={() => setTradeType('sell')}
-                      className={`flex-1 ${tradeType === 'sell' 
-                        ? 'bg-red-600 hover:bg-red-700 text-white' 
-                        : 'border-white/20 text-white/80 hover:bg-white/10 bg-transparent'} rounded-xl`}
-                    >
-                      <Minus size={14} className="mr-1" />
-                      SPRZEDAJ
-                    </Button>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm text-white/60 mb-1 block">Kryptowaluta</label>
-                      <select 
-                        value={selectedCoin}
-                        onChange={(e) => setSelectedCoin(e.target.value)}
-                        className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
-                      >
-                        {cryptoData.map(coin => (
-                          <option key={coin.symbol} value={coin.symbol} className="bg-gray-900">
-                            {coin.symbol} - {coin.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-sm text-white/60 mb-1 block">Ilość</label>
-                      <Input
-                        placeholder="0.00"
-                        value={tradeAmount}
-                        onChange={(e) => setTradeAmount(e.target.value)}
-                        className="bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
-                      />
-                    </div>
-
-                    <Button className={`w-full rounded-xl ${
-                      tradeType === 'buy' 
-                        ? 'bg-green-600 hover:bg-green-700' 
-                        : 'bg-red-600 hover:bg-red-700'
-                    } text-white`}>
-                      <DollarSign size={16} className="mr-2" />
-                      {tradeType === 'buy' ? 'KUPUJ' : 'SPRZEDAJ'}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Selected Coin Info */}
-                {selectedCoinData && (
-                  <div className="bg-white/5 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="text-3xl">{selectedCoinData.icon}</div>
-                      <div>
-                        <div className="font-medium text-lg">{selectedCoinData.name}</div>
-                        <div className="text-white/60">{selectedCoinData.symbol}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-white/60">Cena:</span>
-                        <span className="text-white font-medium">${selectedCoinData.price.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-white/60">Posiadasz:</span>
-                        <span className="text-white font-medium">{selectedCoinData.owned} {selectedCoin}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-white/60">Wartość:</span>
-                        <span className="text-green-400 font-medium">${selectedCoinData.value.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-white/60">24h zmiana:</span>
-                        <span className={`font-medium ${
-                          selectedCoinData.change24h >= 0 ? 'text-green-400' : 'text-red-400'
-                        }`}>
-                          {selectedCoinData.change24h >= 0 ? '+' : ''}{selectedCoinData.change24h}%
-                        </span>
-                      </div>
-                      <div className="pt-2 border-t border-white/10">
-                        <div className="text-xs text-white/40">Portfel:</div>
-                        <div className="text-xs font-mono text-white/60">{selectedCoinData.walletNumber}</div>
-                      </div>
+                {purchaseAmount && (
+                  <div className="bg-white/5 rounded-xl p-3">
+                    <div className="text-sm text-white/80">Koszt zakupu:</div>
+                    <div className="text-xl font-bold text-green-400">
+                      {formatCurrency(parseFloat(purchaseAmount) * (wallets.find(w => w.currency === selectedCrypto)?.price_usd || 0))}
                     </div>
                   </div>
                 )}
               </div>
-            </div>
-          )}
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsPurchasing(false)}
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Anuluj
+                </Button>
+                <Button 
+                  onClick={handlePurchase}
+                  disabled={!purchaseAmount || parseFloat(purchaseAmount) <= 0}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Kup teraz
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={isTransferring} onOpenChange={setIsTransferring}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+                <ArrowUpDown size={16} className="mr-2" />
+                Transfer
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-900/95 backdrop-blur-sm border-white/20 text-white">
+              <DialogHeader>
+                <DialogTitle className="text-white">Transfer Kryptowaluty</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-white/80">Kryptowaluta</label>
+                  <select
+                    value={transferCrypto}
+                    onChange={(e) => setTransferCrypto(e.target.value)}
+                    className="w-full mt-1 p-2 bg-white/10 border border-white/20 rounded-md text-white"
+                  >
+                    {wallets.map(wallet => (
+                      <option key={wallet.currency} value={wallet.currency}>
+                        {wallet.icon} {wallet.name} - {wallet.balance.toFixed(4)} {wallet.currency}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-white/80">Adres portfela odbiorcy</label>
+                  <Input
+                    placeholder="Wprowadź adres portfela..."
+                    value={transferWallet}
+                    onChange={(e) => setTransferWallet(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-white/80">Ilość</label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={transferAmount}
+                    onChange={(e) => setTransferAmount(e.target.value)}
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/40 mt-1"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsTransferring(false)}
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Anuluj
+                </Button>
+                <Button 
+                  onClick={handleTransfer}
+                  disabled={!transferAmount || !transferWallet || parseFloat(transferAmount) <= 0}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Wyślij
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
-      </ScrollArea>
+      </div>
+
+      <div className="p-6 space-y-6 h-[calc(100%-5rem)]">
+        {/* Total Balance */}
+        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 backdrop-blur-sm rounded-3xl p-8 border border-yellow-500/30">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-yellow-500/30 rounded-2xl flex items-center justify-center">
+                <Bitcoin size={24} className="text-yellow-400" />
+              </div>
+              <div>
+                <p className="text-yellow-400 text-sm font-medium">Łączne saldo</p>
+                <p className="text-white/60 text-xs">Wszystkie portfele</p>
+              </div>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setShowBalance(!showBalance)}
+              className="text-yellow-400 hover:bg-yellow-500/20"
+            >
+              {showBalance ? <Eye size={16} /> : <EyeOff size={16} />}
+            </Button>
+          </div>
+          <div className="text-3xl font-bold text-white mb-2">
+            {showBalance ? formatCurrency(totalBalance) : '••••••'}
+          </div>
+          <div className="flex items-center text-sm">
+            <TrendingUp size={16} className="text-green-400 mr-1" />
+            <span className="text-green-400">+8.3% dzisiaj</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[calc(100%-12rem)]">
+          {/* Wallets */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Twoje portfele</h3>
+            <ScrollArea className="h-full [&>div>div]:!block">
+              <div className="space-y-4 pr-4">
+                {wallets.map((wallet) => (
+                  <div key={wallet.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{wallet.icon}</span>
+                        <div>
+                          <h4 className="text-white font-medium">{wallet.name}</h4>
+                          <p className="text-white/60 text-sm">{wallet.currency}</p>
+                        </div>
+                      </div>
+                      <div className={`flex items-center gap-1 text-sm ${
+                        wallet.change_24h >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {wallet.change_24h >= 0 ? 
+                          <TrendingUp size={14} /> : 
+                          <TrendingDown size={14} />
+                        }
+                        {Math.abs(wallet.change_24h)}%
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between">
+                        <span className="text-white/60 text-sm">Saldo:</span>
+                        <span className="text-white font-medium">
+                          {showBalance ? `${wallet.balance.toFixed(4)} ${wallet.currency}` : '••••••'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60 text-sm">Wartość USD:</span>
+                        <span className="text-green-400 font-medium">
+                          {showBalance ? formatCurrency(wallet.balance * wallet.price_usd) : '••••••'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-white/60 text-sm">Cena:</span>
+                        <span className="text-white/80">{formatCurrency(wallet.price_usd)}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 rounded-xl p-3">
+                      <div className="text-white/60 text-xs mb-1">Adres portfela:</div>
+                      <div className="text-white/80 text-sm font-mono break-all">{wallet.address}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Transactions */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Ostatnie transakcje</h3>
+            <ScrollArea className="h-full [&>div>div]:!block">
+              <div className="space-y-3 pr-4">
+                {transactions.map((transaction) => (
+                  <div key={transaction.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        {getTransactionIcon(transaction.type)}
+                        <div>
+                          <div className="text-white font-medium capitalize">
+                            {transaction.type === 'purchase' ? 'Zakup' :
+                             transaction.type === 'transfer' ? 'Transfer' : 'Otrzymano'}
+                          </div>
+                          <div className="text-white/60 text-sm">
+                            {new Date(transaction.date).toLocaleDateString('pl-PL', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`text-right font-medium ${getTransactionColor(transaction.type)}`}>
+                        {transaction.type === 'transfer' ? '-' : '+'}
+                        {transaction.amount.toFixed(4)} {transaction.currency}
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-white/50 space-y-1">
+                      <div>Z: {transaction.from}</div>
+                      <div>Do: {transaction.to}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

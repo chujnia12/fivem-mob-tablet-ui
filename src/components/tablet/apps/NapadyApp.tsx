@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { ArrowLeft, Skull, TrendingUp, Clock, Star, MapPin, Users, Shield, Target, Crosshair } from 'lucide-react';
+import { ArrowLeft, Skull, TrendingUp, Clock, Star, MapPin, Users, Shield, Target, Crosshair, CheckCircle } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { ScrollArea } from '../../ui/scroll-area';
 
@@ -12,17 +13,19 @@ interface NapadyAppProps {
 
 const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
   const [selectedContract, setSelectedContract] = useState<string | null>(null);
+  const [acceptedContracts, setAcceptedContracts] = useState<string[]>([]);
+  const [isAccepting, setIsAccepting] = useState<string | null>(null);
   
   // TODO: Fetch from database - crypto_wallet table
-  const userCrypto = {
+  const [userCrypto, setUserCrypto] = useState({
     LCOIN: 5.34,
     VCASH: 12.7,
     SANCOIN: 23.4,
     total: 15.75 // Łączna wartość w USD
-  };
+  });
 
   // TODO: Fetch from database - crypto_contracts table
-  const contracts = [
+  const [contracts, setContracts] = useState([
     {
       id: 'HIT001',
       title: 'Eliminacja Rival Gang Leader',
@@ -103,7 +106,7 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       max_participants: 2,
       status: 'available'
     }
-  ];
+  ]);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -131,6 +134,7 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       case 'available': return 'text-green-400 bg-green-500/20 border-green-500/30';
       case 'in_progress': return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
       case 'completed': return 'text-blue-400 bg-blue-500/20 border-blue-500/30';
+      case 'accepted': return 'text-purple-400 bg-purple-500/20 border-purple-500/30';
       default: return 'text-gray-400 bg-gray-500/20 border-gray-500/30';
     }
   };
@@ -139,6 +143,33 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
     const userAmount = userCrypto[reward.currency as keyof typeof userCrypto];
     const requiredAmount = reward.amount * 0.1; // 10% zaliczka
     return typeof userAmount === 'number' && userAmount >= requiredAmount;
+  };
+
+  const handleAcceptContract = async (contractId: string) => {
+    const contract = contracts.find(c => c.id === contractId);
+    if (!contract || !canAfford(contract.reward)) return;
+
+    setIsAccepting(contractId);
+    
+    // Simulate accepting contract
+    setTimeout(() => {
+      // Deduct deposit
+      const deposit = contract.reward.amount * 0.1;
+      setUserCrypto(prev => ({
+        ...prev,
+        [contract.reward.currency]: prev[contract.reward.currency as keyof typeof prev] - deposit
+      }));
+
+      // Update contract status
+      setContracts(prev => prev.map(c => 
+        c.id === contractId 
+          ? { ...c, status: 'accepted', participants: c.participants + 1 }
+          : c
+      ));
+
+      setAcceptedContracts(prev => [...prev, contractId]);
+      setIsAccepting(null);
+    }, 2000);
   };
 
   return (
@@ -184,7 +215,7 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       <div className="flex h-[calc(100%-5rem)]">
         {/* Contracts List */}
         <div className="flex-1 p-6">
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full [&>div>div]:!block">
             <div className="space-y-4 pr-4">
               {contracts.map((contract) => (
                 <div key={contract.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
@@ -197,7 +228,8 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
                         </div>
                         <div className={`px-3 py-1 rounded-xl text-xs font-medium border ${getStatusColor(contract.status)}`}>
                           {contract.status === 'available' ? 'DOSTĘPNE' : 
-                           contract.status === 'in_progress' ? 'W TRAKCIE' : 'UKOŃCZONE'}
+                           contract.status === 'in_progress' ? 'W TRAKCIE' : 
+                           contract.status === 'accepted' ? 'PRZYJĘTE' : 'UKOŃCZONE'}
                         </div>
                       </div>
                       
@@ -288,10 +320,35 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
                                   ? 'bg-pink-600 hover:bg-pink-700 text-white' 
                                   : 'bg-gray-600 hover:bg-gray-700 text-gray-300 cursor-not-allowed'
                               }`}
-                              disabled={!canAfford(contract.reward)}
+                              disabled={!canAfford(contract.reward) || isAccepting === contract.id}
+                              onClick={() => handleAcceptContract(contract.id)}
                             >
-                              <Crosshair size={16} className="mr-2" />
-                              PRZYJMIJ ({(contract.reward.amount * 0.1).toFixed(2)} {contract.reward.currency})
+                              {isAccepting === contract.id ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                  PRZYJMUJĘ...
+                                </div>
+                              ) : (
+                                <>
+                                  <Crosshair size={16} className="mr-2" />
+                                  PRZYJMIJ ({(contract.reward.amount * 0.1).toFixed(2)} {contract.reward.currency})
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {contract.status === 'accepted' && (
+                          <div className="flex gap-2">
+                            <div className="flex items-center gap-2 px-3 py-2 bg-purple-500/20 border border-purple-500/30 rounded-xl">
+                              <CheckCircle size={16} className="text-purple-400" />
+                              <span className="text-purple-400 text-sm">PRZYJĘTY</span>
+                            </div>
+                            <Button 
+                              variant="outline" 
+                              className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10 bg-transparent rounded-xl"
+                            >
+                              WYKONAJ
                             </Button>
                           </div>
                         )}
@@ -315,7 +372,7 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
 
         {/* Stats Panel */}
         <div className="w-80 bg-white/5 backdrop-blur-sm border-l border-white/10">
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full [&>div>div]:!block">
             <div className="p-6 space-y-6">
               <h3 className="text-lg font-medium mb-4">Statystyki Kontraktów</h3>
               
@@ -325,6 +382,13 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
                     {contracts.filter(c => c.status === 'available').length}
                   </div>
                   <div className="text-white/60 text-sm">Dostępne kontrakty</div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-4">
+                  <div className="text-2xl font-bold text-purple-400 mb-1">
+                    {contracts.filter(c => c.status === 'accepted').length}
+                  </div>
+                  <div className="text-white/60 text-sm">Przyjęte kontrakty</div>
                 </div>
 
                 <div className="bg-white/5 rounded-xl p-4">

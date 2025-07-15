@@ -14,7 +14,7 @@ import AppsApp from '../components/tablet/apps/AppsApp';
 import NapadyApp from '../components/tablet/apps/NapadyApp';
 import NotesApp from '../components/tablet/apps/NotesApp';
 import NotificationSystem from '../components/tablet/NotificationSystem';
-import { Wifi, WifiHigh } from 'lucide-react';
+import { WifiHigh } from 'lucide-react';
 
 export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats' | 'zlecenia' | 'kryptowaluty' | 'apps' | 'napady' | 'notes';
 
@@ -128,15 +128,15 @@ const TabletOS = () => {
         <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[1.5rem] p-0.5 shadow-2xl border border-gray-700">
           {/* Screen */}
           <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[1.35rem] overflow-hidden relative border border-gray-800">
-            {/* Status Bar */}
-            <div className="flex justify-between items-center px-6 py-3 text-white text-sm bg-black/20 backdrop-blur-sm border-b border-white/5 relative z-30">
+            {/* Status Bar - Reduced height */}
+            <div className="flex justify-between items-center px-6 py-2 text-white text-sm bg-black/20 backdrop-blur-sm border-b border-white/5 relative z-30">
               <div className="flex items-center gap-2">
                 <WifiHigh size={16} className="text-white/80" />
                 <div className="flex items-center gap-1">
                   <div className="w-1 h-1 bg-white/80 rounded-full"></div>
-                  <div className="w-1 h-1 bg-white/80 rounded-full"></div>
-                  <div className="w-1 h-1 bg-white/80 rounded-full"></div>
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                  <div className="w-1.5 h-2 bg-white/80 rounded-sm"></div>
+                  <div className="w-1.5 h-3 bg-white/80 rounded-sm"></div>
+                  <div className="w-1.5 h-4 bg-white rounded-sm"></div>
                 </div>
               </div>
               <div className="text-xs font-medium text-white/90">
@@ -160,7 +160,7 @@ const TabletOS = () => {
             </div>
             
             {/* App Content */}
-            <div className="h-[calc(100%-3.5rem)] relative">
+            <div className="h-[calc(100%-2.5rem)] relative">
               {renderCurrentApp()}
             </div>
 
