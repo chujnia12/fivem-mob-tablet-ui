@@ -12,7 +12,8 @@ import {
   AlertCircle,
   Star,
   Users,
-  Wifi
+  Wifi,
+  Play
 } from 'lucide-react';
 import { AppType } from '../../../pages/TabletOS';
 
@@ -27,6 +28,7 @@ interface AppsAppProps {
   onHome: () => void;
   onPurchase: (app: AppType, price: number) => boolean;
   onInstall: (app: AppType) => void;
+  onOpenApp: (app: AppType) => void;
   installedApps: AppType[];
   purchasedApps: AppType[];
 }
@@ -36,6 +38,7 @@ const AppsApp: React.FC<AppsAppProps> = ({
   onHome, 
   onPurchase, 
   onInstall, 
+  onOpenApp,
   installedApps, 
   purchasedApps 
 }) => {
@@ -89,9 +92,9 @@ const AppsApp: React.FC<AppsAppProps> = ({
     setDownloadingApps(prev => [...prev, app]);
     setDownloadProgress(prev => ({ ...prev, [app]: 0 }));
     
-    // Simulate download progress
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+    // Simulate download progress with animation
+    for (let i = 0; i <= 100; i += 5) {
+      await new Promise(resolve => setTimeout(resolve, 50));
       setDownloadProgress(prev => ({ ...prev, [app]: i }));
     }
     
@@ -118,10 +121,13 @@ const AppsApp: React.FC<AppsAppProps> = ({
     switch (status) {
       case 'installed':
         return (
-          <div className="flex items-center justify-center w-20 h-8 bg-white/10 rounded-full border border-white/20">
-            <CheckCircle size={14} className="text-green-400 mr-1" />
-            <span className="text-xs font-medium text-white/90">Otwórz</span>
-          </div>
+          <button
+            onClick={() => onOpenApp(app.id)}
+            className="flex items-center justify-center w-20 h-8 bg-blue-600/80 hover:bg-blue-600 rounded-full transition-colors border border-blue-500/30"
+          >
+            <Play size={14} className="text-white mr-1" />
+            <span className="text-xs font-medium text-white">Otwórz</span>
+          </button>
         );
       
       case 'purchased':
@@ -139,14 +145,19 @@ const AppsApp: React.FC<AppsAppProps> = ({
         return (
           <div className="flex flex-col items-center justify-center w-20 h-12">
             <div className="flex items-center justify-center w-20 h-8 bg-white/10 rounded-full border border-white/20 mb-1">
-              <Loader size={14} className="animate-spin text-blue-400 mr-1" />
+              <div className="relative">
+                <Loader size={14} className="animate-spin text-blue-400 mr-1" />
+                <div className="absolute inset-0 animate-pulse bg-blue-400/20 rounded-full"></div>
+              </div>
               <span className="text-xs font-medium text-white/90">{progress}%</span>
             </div>
             <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-blue-400 transition-all duration-300 ease-out"
+                className="h-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-300 ease-out relative"
                 style={{ width: `${progress}%` }}
-              />
+              >
+                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+              </div>
             </div>
           </div>
         );

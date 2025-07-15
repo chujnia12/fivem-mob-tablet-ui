@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Minus, Wallet, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, DollarSign, RefreshCw, Plus, Minus, Wallet, BarChart3, ArrowUpDown } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
@@ -18,6 +17,10 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
   const [tradeType, setTradeType] = useState('buy');
   const [tradeAmount, setTradeAmount] = useState('');
   const [activeTab, setActiveTab] = useState('portfolio');
+  const [depositAmount, setDepositAmount] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [transferWallet, setTransferWallet] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   // TODO: Fetch from database - crypto_portfolio, crypto_prices tables
   // Fikcyjne kryptowaluty inspirowane GTA 5
@@ -29,7 +32,8 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
       change24h: 3.21,
       owned: 5.2847,
       value: 15043.82,
-      icon: '🏛️'
+      icon: '🏛️',
+      walletNumber: 'LC-4578-9021-3456'
     },
     {
       symbol: 'VCASH',
@@ -38,7 +42,8 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
       change24h: -2.14,
       owned: 8.1,
       value: 12491.42,
-      icon: '🌴'
+      icon: '🌴',
+      walletNumber: 'VC-7823-1456-9087'
     },
     {
       symbol: 'SANCOIN',
@@ -47,7 +52,8 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
       change24h: 5.67,
       owned: 15.2,
       value: 8631.93,
-      icon: '🏔️'
+      icon: '🏔️',
+      walletNumber: 'SA-2341-7865-4321'
     },
     {
       symbol: 'NCCOIN',
@@ -56,7 +62,8 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
       change24h: -1.23,
       owned: 25.8,
       value: 6051.65,
-      icon: '🏭'
+      icon: '🏭',
+      walletNumber: 'NC-9876-5432-1098'
     },
     {
       symbol: 'BULLCOIN',
@@ -65,7 +72,8 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
       change24h: 8.45,
       owned: 67.2,
       value: 6003.65,
-      icon: '🦈'
+      icon: '🦈',
+      walletNumber: 'BS-1357-9246-8024'
     },
     {
       symbol: 'LSCOIN',
@@ -74,7 +82,8 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
       change24h: -3.45,
       owned: 123.4,
       value: 5635.68,
-      icon: '🌆'
+      icon: '🌆',
+      walletNumber: 'LS-4682-1359-7531'
     }
   ];
 
@@ -120,6 +129,30 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
   const totalPortfolioValue = cryptoData.reduce((sum, coin) => sum + coin.value, 0);
   const selectedCoinData = cryptoData.find(coin => coin.symbol === selectedCoin);
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    // TODO: Fetch latest crypto prices from database
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setRefreshing(false);
+  };
+
+  const handleDeposit = () => {
+    if (depositAmount && selectedCoinData) {
+      // TODO: Process deposit to database
+      alert(`Wpłacono ${depositAmount} USD na portfel ${selectedCoinData.walletNumber}`);
+      setDepositAmount('');
+    }
+  };
+
+  const handleTransfer = () => {
+    if (transferAmount && transferWallet && selectedCoinData) {
+      // TODO: Process transfer to database
+      alert(`Przekazano ${transferAmount} ${selectedCoin} na portfel ${transferWallet}`);
+      setTransferAmount('');
+      setTransferWallet('');
+    }
+  };
+
   return (
     <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black text-white">
       {/* Header */}
@@ -143,9 +176,13 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
             <span className="text-white/60 text-sm">Portfolio: </span>
             <span className="text-green-400 font-medium">${totalPortfolioValue.toLocaleString()}</span>
           </div>
-          <Button className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl">
-            <RefreshCw size={16} className="mr-2" />
-            ODŚWIEŻ
+          <Button 
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl"
+          >
+            <RefreshCw size={16} className={`mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'ODŚWIEŻANIE...' : 'ODŚWIEŻ'}
           </Button>
         </div>
       </div>
@@ -185,9 +222,8 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
         </button>
       </div>
 
-      <div className="flex h-[calc(100%-9rem)]">
-        {/* Main Content */}
-        <div className="flex-1 p-6 space-y-6">
+      <ScrollArea className="h-[calc(100%-9rem)] custom-scrollbar">
+        <div className="p-6 space-y-6">
           {activeTab === 'portfolio' && (
             <>
               {/* Portfolio Overview */}
@@ -259,10 +295,97 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
 
           {activeTab === 'wallet' && (
             <div className="space-y-6">
+              {/* Wallet Operations */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                <h3 className="text-lg font-medium mb-4">Operacje Portfelowe</h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Deposit Section */}
+                  <div className="space-y-4">
+                    <h4 className="text-md font-medium text-yellow-400">Wpłata na Portfel</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm text-white/60 mb-1 block">Wybierz Portfel</label>
+                        <select 
+                          value={selectedCoin}
+                          onChange={(e) => setSelectedCoin(e.target.value)}
+                          className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white"
+                        >
+                          {cryptoData.map(coin => (
+                            <option key={coin.symbol} value={coin.symbol} className="bg-gray-900">
+                              {coin.symbol} - {coin.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {selectedCoinData && (
+                        <div className="bg-white/5 rounded-xl p-3">
+                          <div className="text-sm text-white/60 mb-1">Numer Portfela:</div>
+                          <div className="font-mono text-white">{selectedCoinData.walletNumber}</div>
+                        </div>
+                      )}
+
+                      <div>
+                        <label className="text-sm text-white/60 mb-1 block">Kwota (USD)</label>
+                        <Input
+                          placeholder="0.00"
+                          value={depositAmount}
+                          onChange={(e) => setDepositAmount(e.target.value)}
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
+                        />
+                      </div>
+
+                      <Button 
+                        onClick={handleDeposit}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl"
+                      >
+                        <Plus size={16} className="mr-2" />
+                        WPŁAĆ
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Transfer Section */}
+                  <div className="space-y-4">
+                    <h4 className="text-md font-medium text-blue-400">Transfer Między Portfelami</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm text-white/60 mb-1 block">Ilość do Transferu</label>
+                        <Input
+                          placeholder="0.00"
+                          value={transferAmount}
+                          onChange={(e) => setTransferAmount(e.target.value)}
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-sm text-white/60 mb-1 block">Docelowy Portfel</label>
+                        <Input
+                          placeholder="XX-0000-0000-0000"
+                          value={transferWallet}
+                          onChange={(e) => setTransferWallet(e.target.value)}
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
+                        />
+                      </div>
+
+                      <Button 
+                        onClick={handleTransfer}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+                      >
+                        <ArrowUpDown size={16} className="mr-2" />
+                        PRZEKAŻ
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Wallet Summary */}
               <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium">Portfel Kryptowalut</h3>
+                  <h3 className="text-lg font-medium">Portfele Kryptowalut</h3>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-green-400">
                       ${totalPortfolioValue.toLocaleString()}
@@ -273,18 +396,21 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
 
                 <div className="grid gap-4">
                   {cryptoData.map((coin) => (
-                    <div key={coin.symbol} className="bg-white/5 rounded-xl p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{coin.icon}</div>
-                        <div>
-                          <div className="font-medium">{coin.name}</div>
-                          <div className="text-white/60 text-sm">{coin.symbol}</div>
+                    <div key={coin.symbol} className="bg-white/5 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="text-2xl">{coin.icon}</div>
+                          <div>
+                            <div className="font-medium">{coin.name}</div>
+                            <div className="text-white/60 text-sm">{coin.symbol}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">{coin.owned} {coin.symbol}</div>
+                          <div className="text-green-400 text-sm">${coin.value.toLocaleString()}</div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-medium">{coin.owned} {coin.symbol}</div>
-                        <div className="text-green-400 text-sm">${coin.value.toLocaleString()}</div>
-                      </div>
+                      <div className="text-xs text-white/40 font-mono">{coin.walletNumber}</div>
                     </div>
                   ))}
                 </div>
@@ -421,6 +547,10 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
                           {selectedCoinData.change24h >= 0 ? '+' : ''}{selectedCoinData.change24h}%
                         </span>
                       </div>
+                      <div className="pt-2 border-t border-white/10">
+                        <div className="text-xs text-white/40">Portfel:</div>
+                        <div className="text-xs font-mono text-white/60">{selectedCoinData.walletNumber}</div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -428,7 +558,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
             </div>
           )}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
@@ -13,7 +14,7 @@ import AppsApp from '../components/tablet/apps/AppsApp';
 import NapadyApp from '../components/tablet/apps/NapadyApp';
 import NotesApp from '../components/tablet/apps/NotesApp';
 import NotificationSystem from '../components/tablet/NotificationSystem';
-import { Wifi } from 'lucide-react';
+import { Wifi, WifiHigh } from 'lucide-react';
 
 export type AppType = 'home' | 'finance' | 'members' | 'transactions' | 'orders' | 'settings' | 'stats' | 'zlecenia' | 'kryptowaluty' | 'apps' | 'napady' | 'notes';
 
@@ -42,6 +43,16 @@ const TabletOS = () => {
   const installApp = (app: AppType) => {
     if (!installedApps.includes(app)) {
       setInstalledApps(prev => [...prev, app]);
+    }
+  };
+
+  const uninstallApp = (app: AppType) => {
+    const defaultApps: AppType[] = ['finance', 'members', 'transactions', 'orders', 'settings', 'stats', 'apps', 'notes'];
+    if (!defaultApps.includes(app)) {
+      setInstalledApps(prev => prev.filter(installedApp => installedApp !== app));
+      if (currentApp === app) {
+        goHome();
+      }
     }
   };
 
@@ -102,11 +113,11 @@ const TabletOS = () => {
       case 'kryptowaluty':
         return installedApps.includes('kryptowaluty') ? <KryptowalutyApp orgData={orgData} onHome={goHome} /> : <div>App not installed</div>;
       case 'apps':
-        return <AppsApp orgData={orgData} onHome={goHome} onPurchase={purchaseApp} onInstall={installApp} installedApps={installedApps} purchasedApps={purchasedApps} />;
+        return <AppsApp orgData={orgData} onHome={goHome} onPurchase={purchaseApp} onInstall={installApp} onOpenApp={openApp} installedApps={installedApps} purchasedApps={purchasedApps} />;
       case 'napady':
         return installedApps.includes('napady') ? <NapadyApp orgData={orgData} onHome={goHome} /> : <div>App not installed</div>;
       default:
-        return <HomeScreen orgData={orgData} onOpenApp={openApp} installedApps={installedApps} />;
+        return <HomeScreen orgData={orgData} onOpenApp={openApp} installedApps={installedApps} onUninstallApp={uninstallApp} />;
     }
   };
 
@@ -114,13 +125,13 @@ const TabletOS = () => {
     <div className="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
       <div className="relative">
         {/* Tablet Frame - Thinner borders */}
-        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[1.5rem] p-1 shadow-2xl border border-gray-700">
+        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[1.5rem] p-0.5 shadow-2xl border border-gray-700">
           {/* Screen */}
-          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[1.2rem] overflow-hidden relative border border-gray-800">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[1.35rem] overflow-hidden relative border border-gray-800">
             {/* Status Bar */}
             <div className="flex justify-between items-center px-6 py-3 text-white text-sm bg-black/20 backdrop-blur-sm border-b border-white/5 relative z-30">
               <div className="flex items-center gap-2">
-                <Wifi size={16} className="text-white/80" />
+                <WifiHigh size={16} className="text-white/80" />
                 <div className="flex items-center gap-1">
                   <div className="w-1 h-1 bg-white/80 rounded-full"></div>
                   <div className="w-1 h-1 bg-white/80 rounded-full"></div>
