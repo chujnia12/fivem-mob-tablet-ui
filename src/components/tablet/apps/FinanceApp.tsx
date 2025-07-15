@@ -68,18 +68,18 @@ const FinanceApp: React.FC<FinanceAppProps> = ({ orgData, onHome }) => {
         </Button>
       </div>
 
-      <ScrollArea className="h-[calc(100%-5rem)] [&>div>div]:!block">
+      <ScrollArea className="h-[calc(100%-5rem)] [&>div>div]:!block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
         <div className="p-8 space-y-6">
           {/* Balance Cards */}
           <div className="grid grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 backdrop-blur-sm rounded-3xl p-8 border border-green-500/30">
+            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-green-500/30 rounded-2xl flex items-center justify-center">
-                    <DollarSign size={24} className="text-green-400" />
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
+                    <DollarSign size={24} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-green-400 text-sm font-medium">Saldo Główne</p>
+                    <p className="text-white text-sm font-medium">Saldo Główne</p>
                     <p className="text-white/60 text-xs">Gotówka organizacji</p>
                   </div>
                 </div>
@@ -87,7 +87,7 @@ const FinanceApp: React.FC<FinanceAppProps> = ({ orgData, onHome }) => {
                   size="sm"
                   variant="ghost"
                   onClick={() => setShowBalance(!showBalance)}
-                  className="text-green-400 hover:bg-green-500/20"
+                  className="text-white/60 hover:bg-white/10"
                 >
                   {showBalance ? <Eye size={16} /> : <EyeOff size={16} />}
                 </Button>
@@ -101,14 +101,14 @@ const FinanceApp: React.FC<FinanceAppProps> = ({ orgData, onHome }) => {
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 backdrop-blur-sm rounded-3xl p-8 border border-orange-500/30">
+            <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-orange-500/30 rounded-2xl flex items-center justify-center">
-                    <CreditCard size={24} className="text-orange-400" />
+                  <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
+                    <CreditCard size={24} className="text-white" />
                   </div>
                   <div>
-                    <p className="text-orange-400 text-sm font-medium">Kryptowaluty</p>
+                    <p className="text-white text-sm font-medium">Kryptowaluty</p>
                     <p className="text-white/60 text-xs">COIN Balance</p>
                   </div>
                 </div>

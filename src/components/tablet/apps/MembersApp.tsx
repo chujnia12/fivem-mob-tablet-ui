@@ -266,7 +266,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
           </div>
 
           {/* Members Grid */}
-          <ScrollArea className="h-[calc(100%-8rem)] rounded-2xl">
+          <ScrollArea className="h-[calc(100%-8rem)] rounded-2xl [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
             <div className="grid grid-cols-2 gap-4 pr-4">
               {filteredMembers.map((member) => {
                 const RankIcon = getRankIcon(member.rank);
@@ -357,7 +357,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
 
         {/* Statistics Panel */}
         <div className="w-80 bg-white/5 backdrop-blur-sm border-l border-white/10 p-6 space-y-6">
-          <ScrollArea className="h-full">
+          <ScrollArea className="h-full [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
             <div className="space-y-6">
               <h3 className="text-lg font-medium mb-4">Statystyki</h3>
               
@@ -455,7 +455,7 @@ const MembersApp: React.FC<MembersAppProps> = ({ orgData, onHome }) => {
               
               <div className="space-y-2">
                 <label className="text-sm text-white/80">Nowa ranga:</label>
-                <select className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white">
+                <select className="w-full bg-gray-800 border border-white/20 rounded-lg px-3 py-2 text-white [&>option]:bg-gray-800 [&>option]:text-white">
                   <option value="1">CZŁONEK (1)</option>
                   <option value="2">CZŁONEK (2)</option>
                   <option value="3">STARSZY CZŁONEK (3)</option>

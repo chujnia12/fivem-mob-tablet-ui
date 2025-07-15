@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ArrowLeft, Bitcoin, TrendingUp, TrendingDown, RefreshCw, DollarSign, CreditCard, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../ui/button';
@@ -234,7 +233,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
                   <select
                     value={selectedCrypto}
                     onChange={(e) => setSelectedCrypto(e.target.value)}
-                    className="w-full mt-1 p-2 bg-white/10 border border-white/20 rounded-md text-white"
+                    className="w-full mt-1 p-2 bg-gray-800 border border-white/20 rounded-md text-white [&>option]:bg-gray-800 [&>option]:text-white"
                   >
                     {wallets.map(wallet => (
                       <option key={wallet.currency} value={wallet.currency}>
@@ -266,7 +265,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
                 <Button 
                   variant="outline" 
                   onClick={() => setIsPurchasing(false)}
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="border-white/20 text-white hover:bg-white/10 bg-transparent"
                 >
                   Anuluj
                 </Button>
@@ -298,7 +297,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
                   <select
                     value={transferCrypto}
                     onChange={(e) => setTransferCrypto(e.target.value)}
-                    className="w-full mt-1 p-2 bg-white/10 border border-white/20 rounded-md text-white"
+                    className="w-full mt-1 p-2 bg-gray-800 border border-white/20 rounded-md text-white [&>option]:bg-gray-800 [&>option]:text-white"
                   >
                     {wallets.map(wallet => (
                       <option key={wallet.currency} value={wallet.currency}>
@@ -331,7 +330,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
                 <Button 
                   variant="outline" 
                   onClick={() => setIsTransferring(false)}
-                  className="border-white/20 text-white hover:bg-white/10"
+                  className="border-white/20 text-white hover:bg-white/10 bg-transparent"
                 >
                   Anuluj
                 </Button>
@@ -350,14 +349,14 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
 
       <div className="p-6 space-y-6 h-[calc(100%-5rem)]">
         {/* Total Balance */}
-        <div className="bg-gradient-to-br from-yellow-500/20 to-orange-600/20 backdrop-blur-sm rounded-3xl p-8 border border-yellow-500/30">
+        <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-yellow-500/30 rounded-2xl flex items-center justify-center">
-                <Bitcoin size={24} className="text-yellow-400" />
+              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
+                <Bitcoin size={24} className="text-white" />
               </div>
               <div>
-                <p className="text-yellow-400 text-sm font-medium">Łączne saldo</p>
+                <p className="text-white text-sm font-medium">Łączne saldo</p>
                 <p className="text-white/60 text-xs">Wszystkie portfele</p>
               </div>
             </div>
@@ -365,7 +364,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
               size="sm"
               variant="ghost"
               onClick={() => setShowBalance(!showBalance)}
-              className="text-yellow-400 hover:bg-yellow-500/20"
+              className="text-white/60 hover:bg-white/10"
             >
               {showBalance ? <Eye size={16} /> : <EyeOff size={16} />}
             </Button>
@@ -383,7 +382,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
           {/* Wallets */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Twoje portfele</h3>
-            <ScrollArea className="h-full [&>div>div]:!block">
+            <ScrollArea className="h-full [&>div>div]:!block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
               <div className="space-y-4 pr-4">
                 {wallets.map((wallet) => (
                   <div key={wallet.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
@@ -438,7 +437,7 @@ const KryptowalutyApp: React.FC<KryptowalutyAppProps> = ({ orgData, onHome }) =>
           {/* Transactions */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Ostatnie transakcje</h3>
-            <ScrollArea className="h-full [&>div>div]:!block">
+            <ScrollArea className="h-full [&>div>div]:!block [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-800/50 [&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-500/50">
               <div className="space-y-3 pr-4">
                 {transactions.map((transaction) => (
                   <div key={transaction.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-200">
