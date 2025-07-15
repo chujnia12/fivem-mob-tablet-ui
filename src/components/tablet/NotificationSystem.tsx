@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { X, Bell, AlertTriangle, CheckCircle, Info, Skull } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Bell, AlertTriangle, CheckCircle, Info, Skull, Eye } from 'lucide-react';
 
 interface Notification {
   id: string;
@@ -49,14 +48,15 @@ const NotificationSystem = () => {
   ]);
 
   const [showNotifications, setShowNotifications] = useState(false);
-  const { toast } = useToast();
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const [inAppNotification, setInAppNotification] = useState<Notification | null>(null);
+  const inAppTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // iPhone-style notification sound with bell
+  // iPhone-style notification sound
   const playNotificationSound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Create iPhone-like bell sound with multiple harmonics
       const createComplexBellTone = () => {
         const now = audioContext.currentTime;
         
@@ -108,7 +108,7 @@ const NotificationSystem = () => {
     }
   };
 
-  // Symulacja nowych powiadomień
+  // Simulate new notifications
   useEffect(() => {
     const interval = setInterval(() => {
       if (Math.random() > 0.8) {
@@ -128,20 +128,27 @@ const NotificationSystem = () => {
 
         setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
         
-        if (newNotification.type === 'success' || newNotification.type === 'error') {
-          toast({
-            title: newNotification.title,
-            description: newNotification.message,
-            variant: newNotification.type === 'error' ? 'destructive' : 'default',
-          });
-          
-          playNotificationSound();
+        // Show in-app notification for 4 seconds
+        setInAppNotification(newNotification);
+        playNotificationSound();
+        
+        if (inAppTimeoutRef.current) {
+          clearTimeout(inAppTimeoutRef.current);
         }
+        
+        inAppTimeoutRef.current = setTimeout(() => {
+          setInAppNotification(null);
+        }, 4000);
       }
     }, 10000);
 
-    return () => clearInterval(interval);
-  }, [toast]);
+    return () => {
+      clearInterval(interval);
+      if (inAppTimeoutRef.current) {
+        clearTimeout(inAppTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -164,6 +171,7 @@ const NotificationSystem = () => {
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  const latestNotification = notifications[0];
 
   const markAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => 
@@ -188,115 +196,206 @@ const NotificationSystem = () => {
   };
 
   return (
-    <div className="relative">
-      {/* Small Notification Bell */}
-      <button
-        onClick={() => setShowNotifications(!showNotifications)}
-        className="relative p-1 hover:bg-white/10 rounded transition-all duration-200 text-white"
-      >
-        <Bell size={16} className="text-white/80" />
-        {unreadCount > 0 && (
-          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold text-[10px] animate-pulse">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </div>
-        )}
-      </button>
-
-      {/* Notifications Panel - High z-index to be above everything */}
-      {showNotifications && (
-        <div className="fixed top-16 right-6 w-80 bg-black/95 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-[9999] max-h-96">
-          <div className="p-3 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
-            <div className="flex items-center justify-between">
-              <h3 className="text-white font-medium text-sm">Powiadomienia</h3>
+    <>
+      {/* In-app notification banner */}
+      {inAppNotification && (
+        <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-[10000] animate-fade-in">
+          <div className={`p-3 rounded-xl border backdrop-blur-md shadow-2xl max-w-sm ${getNotificationColor(inAppNotification.type)}`}>
+            <div className="flex items-start gap-3">
+              {React.createElement(getNotificationIcon(inAppNotification.type), { size: 16, className: "mt-0.5 flex-shrink-0" })}
+              <div className="flex-1 min-w-0">
+                <h4 className="text-white font-medium text-sm mb-1">
+                  {inAppNotification.title}
+                </h4>
+                <p className="text-white/80 text-xs leading-relaxed">
+                  {inAppNotification.message}
+                </p>
+              </div>
               <button
-                onClick={() => setShowNotifications(false)}
-                className="text-white/60 hover:text-white p-1 hover:bg-white/10 rounded transition-colors"
+                onClick={() => setInAppNotification(null)}
+                className="text-white/60 hover:text-white p-1 hover:bg-white/10 rounded"
               >
-                <X size={14} />
+                <X size={12} />
               </button>
             </div>
-            {unreadCount > 0 && (
-              <p className="text-white/60 text-xs mt-1">{unreadCount} nieprzeczytanych</p>
-            )}
           </div>
-          
-          <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-track-gray-800/50 scrollbar-thumb-white/20 hover:scrollbar-thumb-white/30">
-            {notifications.length === 0 ? (
-              <div className="p-6 text-center text-white/60">
-                <Bell size={24} className="mx-auto mb-2 opacity-50" />
-                <p className="text-xs">Brak powiadomień</p>
-              </div>
-            ) : (
-              <div className="space-y-1 p-2">
-                {notifications.map((notification) => {
-                  const Icon = getNotificationIcon(notification.type);
-                  return (
-                    <div
-                      key={notification.id}
-                      className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-white/5 relative ${
-                        notification.read ? 'opacity-60' : 'shadow-lg'
-                      } ${getNotificationColor(notification.type)}`}
-                      onClick={() => {
-                        markAsRead(notification.id);
-                        removeNotification(notification.id);
-                      }}
-                    >
-                      <div className="flex items-start gap-2">
-                        <Icon size={14} className="mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-1">
-                            <h4 className="text-white font-medium text-xs">
-                              {notification.title}
-                            </h4>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeNotification(notification.id);
-                              }}
-                              className="text-white/40 hover:text-white/80 p-0.5 hover:bg-white/10 rounded"
-                            >
-                              <X size={10} />
-                            </button>
-                          </div>
-                          <p className="text-white/80 text-xs mb-1 leading-relaxed">
-                            {notification.message}
-                          </p>
-                          <span className="text-white/40 text-[10px]">
-                            {formatTime(notification.timestamp)}
-                          </span>
-                        </div>
-                      </div>
-                      {!notification.read && (
-                        <div className="absolute left-1 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          
-          {notifications.length > 0 && (
-            <div className="p-2 border-t border-white/10 bg-gradient-to-r from-gray-900/40 to-black/40">
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
-                  className="flex-1 text-[10px] text-white/60 hover:text-white transition-colors py-1.5 px-2 rounded hover:bg-white/10"
-                >
-                  Oznacz jako przeczytane
-                </button>
-                <button
-                  onClick={() => setNotifications([])}
-                  className="flex-1 text-[10px] text-white/60 hover:text-red-400 transition-colors py-1.5 px-2 rounded hover:bg-red-500/10"
-                >
-                  Wyczyść wszystkie
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       )}
-    </div>
+
+      <div className="relative">
+        {/* Notification Bell */}
+        <button
+          onClick={() => {
+            setShowNotifications(!showNotifications);
+            setShowAllNotifications(false);
+          }}
+          className="relative p-1 hover:bg-white/10 rounded transition-all duration-200 text-white"
+        >
+          <Bell size={16} className="text-white/80" />
+          {unreadCount > 0 && (
+            <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold text-[10px] animate-pulse">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </div>
+          )}
+        </button>
+
+        {/* Notifications Panel */}
+        {showNotifications && (
+          <div className="fixed top-16 right-6 w-80 bg-black/95 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-[10001]">
+            <div className="p-3 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white font-medium text-sm">
+                  {showAllNotifications ? 'Wszystkie powiadomienia' : 'Najnowsze powiadomienie'}
+                </h3>
+                <button
+                  onClick={() => setShowNotifications(false)}
+                  className="text-white/60 hover:text-white p-1 hover:bg-white/10 rounded transition-colors"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              {unreadCount > 0 && !showAllNotifications && (
+                <p className="text-white/60 text-xs mt-1">{unreadCount} nieprzeczytanych</p>
+              )}
+            </div>
+            
+            <div className="max-h-80 overflow-y-auto custom-scrollbar">
+              {notifications.length === 0 ? (
+                <div className="p-6 text-center text-white/60">
+                  <Bell size={24} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">Brak powiadomień</p>
+                </div>
+              ) : (
+                <div className="space-y-1 p-2">
+                  {showAllNotifications ? notifications.map((notification) => {
+                    const Icon = getNotificationIcon(notification.type);
+                    return (
+                      <div
+                        key={notification.id}
+                        className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-white/5 relative ${
+                          notification.read ? 'opacity-60' : 'shadow-lg'
+                        } ${getNotificationColor(notification.type)}`}
+                        onClick={() => {
+                          markAsRead(notification.id);
+                          removeNotification(notification.id);
+                        }}
+                      >
+                        <div className="flex items-start gap-2">
+                          <Icon size={14} className="mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className="text-white font-medium text-xs">
+                                {notification.title}
+                              </h4>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeNotification(notification.id);
+                                }}
+                                className="text-white/40 hover:text-white/80 p-0.5 hover:bg-white/10 rounded"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                            <p className="text-white/80 text-xs mb-1 leading-relaxed">
+                              {notification.message}
+                            </p>
+                            <span className="text-white/40 text-[10px]">
+                              {formatTime(notification.timestamp)}
+                            </span>
+                          </div>
+                        </div>
+                        {!notification.read && (
+                          <div className="absolute left-1 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                        )}
+                      </div>
+                    );
+                  }) : latestNotification && (
+                    <div className="p-2">
+                      <div
+                        className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-white/5 relative ${
+                          latestNotification.read ? 'opacity-60' : 'shadow-lg'
+                        } ${getNotificationColor(latestNotification.type)}`}
+                        onClick={() => {
+                          markAsRead(latestNotification.id);
+                          removeNotification(latestNotification.id);
+                        }}
+                      >
+                        <div className="flex items-start gap-2">
+                          {React.createElement(getNotificationIcon(latestNotification.type), { size: 14, className: "mt-0.5 flex-shrink-0" })}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className="text-white font-medium text-xs">
+                                {latestNotification.title}
+                              </h4>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeNotification(latestNotification.id);
+                                }}
+                                className="text-white/40 hover:text-white/80 p-0.5 hover:bg-white/10 rounded"
+                              >
+                                <X size={10} />
+                              </button>
+                            </div>
+                            <p className="text-white/80 text-xs mb-1 leading-relaxed">
+                              {latestNotification.message}
+                            </p>
+                            <span className="text-white/40 text-[10px]">
+                              {formatTime(latestNotification.timestamp)}
+                            </span>
+                          </div>
+                        </div>
+                        {!latestNotification.read && (
+                          <div className="absolute left-1 top-1/2 transform -translate-y-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                        )}
+                      </div>
+                      
+                      {notifications.length > 1 && (
+                        <button
+                          onClick={() => setShowAllNotifications(true)}
+                          className="w-full mt-2 p-2 text-xs text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                          <Eye size={12} />
+                          Pokaż wszystkie ({notifications.length})
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {notifications.length > 0 && (
+              <div className="p-2 border-t border-white/10 bg-gradient-to-r from-gray-900/40 to-black/40">
+                <div className="flex gap-1">
+                  {showAllNotifications && (
+                    <button
+                      onClick={() => setShowAllNotifications(false)}
+                      className="flex-1 text-[10px] text-white/60 hover:text-white transition-colors py-1.5 px-2 rounded hover:bg-white/10"
+                    >
+                      Pokaż najnowsze
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
+                    className="flex-1 text-[10px] text-white/60 hover:text-white transition-colors py-1.5 px-2 rounded hover:bg-white/10"
+                  >
+                    Oznacz jako przeczytane
+                  </button>
+                  <button
+                    onClick={() => setNotifications([])}
+                    className="flex-1 text-[10px] text-white/60 hover:text-red-400 transition-colors py-1.5 px-2 rounded hover:bg-red-500/10"
+                  >
+                    Wyczyść wszystkie
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

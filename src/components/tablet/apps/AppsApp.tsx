@@ -1,347 +1,221 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Download, Star, Bitcoin, Check, ShoppingCart, Loader, Play } from 'lucide-react';
-import { Button } from '../../ui/button';
-import { ScrollArea } from '../../ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../../ui/dialog";
+import { 
+  ArrowLeft, 
+  Download, 
+  Briefcase, 
+  Bitcoin, 
+  Crosshair, 
+  ShoppingCart,
+  CheckCircle,
+  Loader,
+  AlertCircle
+} from 'lucide-react';
+import { AppType } from '../../../pages/TabletOS';
 
 interface AppsAppProps {
   orgData: {
     name: string;
-    crypto_balance?: number;
+    rank: number;
+    id: number;
+    balance: number;
+    crypto_balance: number;
   };
   onHome: () => void;
-  onPurchase: (app: string, price: number) => boolean;
-  onInstall: (app: string) => void;
-  installedApps: string[];
-  purchasedApps: string[];
+  onPurchase: (app: AppType, price: number) => boolean;
+  onInstall: (app: AppType) => void;
+  installedApps: AppType[];
+  purchasedApps: AppType[];
 }
 
-const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, onInstall, installedApps, purchasedApps }) => {
-  const { toast } = useToast();
-  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
-  const [selectedApp, setSelectedApp] = useState<any>(null);
-  const [downloading, setDownloading] = useState<string | null>(null);
-
-  const userCrypto = orgData.crypto_balance || 15.75;
+const AppsApp: React.FC<AppsAppProps> = ({ 
+  orgData, 
+  onHome, 
+  onPurchase, 
+  onInstall, 
+  installedApps, 
+  purchasedApps 
+}) => {
+  const [downloadingApps, setDownloadingApps] = useState<string[]>([]);
 
   const availableApps = [
     {
-      id: 'zlecenia',
-      name: 'Zlecenia Pro',
-      description: 'Zaawansowany system zarządzania zleceniami organizacji przestępczej',
-      rating: 4.8,
-      downloads: 15420,
+      id: 'zlecenia' as AppType,
+      name: 'Zlecenia',
+      description: 'Zarządzaj zleceniami organizacji',
+      icon: Briefcase,
       price: 2.5,
-      icon: 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=100&h=100&fit=crop',
-      developer: 'CrimeTech Solutions',
-      size: '12.4 MB'
+      color: 'bg-red-600'
     },
     {
-      id: 'kryptowaluty',
-      name: 'CryptoVault Pro',
-      description: 'Zaawansowany portfel kryptowalut z funkcjami prania pieniędzy',
-      rating: 4.9,
-      downloads: 23450,
-      price: 5.0,
-      icon: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=100&h=100&fit=crop',
-      developer: 'Anonymous Finance',
-      size: '45.2 MB'
+      id: 'kryptowaluty' as AppType,
+      name: 'Kryptowaluty',
+      description: 'Handel kryptowalutami',
+      icon: Bitcoin,
+      price: 3.2,
+      color: 'bg-yellow-600'
     },
     {
-      id: 'napady',
-      name: 'Heist Planner Pro',
-      description: 'Planowanie i koordynacja skomplikowanych operacji kryminalnych',
-      rating: 4.7,
-      downloads: 12340,
-      price: 7.5,
-      icon: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop',
-      developer: 'Criminal Masterminds',
-      size: '67.3 MB'
-    }
+      id: 'napady' as AppType,
+      name: 'Napady',
+      description: 'Planowanie i wykonywanie napadów',
+      icon: Crosshair,
+      price: 4.8,
+      color: 'bg-pink-600'
+    },
   ];
 
-  const handlePurchase = (app: typeof availableApps[0]) => {
-    if (installedApps.includes(app.id)) {
-      toast({
-        title: "Aplikacja już zainstalowana",
-        description: `${app.name} jest już zainstalowana na tym urządzeniu`,
-      });
-      return;
+  const handlePurchase = (app: AppType, price: number) => {
+    const success = onPurchase(app, price);
+    if (!success) {
+      alert('Niewystarczające środki!');
     }
-
-    if (purchasedApps.includes(app.id)) {
-      // Already purchased, start download
-      handleDownload(app);
-      return;
-    }
-
-    setSelectedApp(app);
-    setShowPurchaseDialog(true);
   };
 
-  const handleDownload = (app: typeof availableApps[0]) => {
-    setDownloading(app.id);
+  const handleDownload = async (app: AppType) => {
+    setDownloadingApps(prev => [...prev, app]);
     
-    setTimeout(() => {
-      setDownloading(null);
-      onInstall(app.id);
-      toast({
-        title: "Aplikacja zainstalowana",
-        description: `${app.name} została pomyślnie zainstalowana`,
-      });
-    }, 3000);
-  };
-
-  const confirmPurchase = async () => {
-    if (!selectedApp) return;
-
-    const success = onPurchase(selectedApp.id, selectedApp.price);
+    // Simulate download time
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
-    if (success) {
-      setShowPurchaseDialog(false);
-      toast({
-        title: "Aplikacja zakupiona",
-        description: `${selectedApp.name} została zakupiona. Możesz teraz ją pobrać.`,
-      });
-      setSelectedApp(null);
-    } else {
-      toast({
-        title: "Niewystarczające środki",
-        description: `Potrzebujesz ${selectedApp.price} VCASH aby kupić ${selectedApp.name}`,
-        variant: "destructive",
-      });
-    }
+    onInstall(app);
+    setDownloadingApps(prev => prev.filter(a => a !== app));
   };
 
-  const getAppStatus = (app: typeof availableApps[0]) => {
-    if (installedApps.includes(app.id)) return 'installed';
-    if (downloading === app.id) return 'downloading';
-    if (purchasedApps.includes(app.id)) return 'purchased';
+  const getAppStatus = (appId: AppType) => {
+    if (installedApps.includes(appId)) return 'installed';
+    if (purchasedApps.includes(appId)) return 'purchased';
+    if (downloadingApps.includes(appId)) return 'downloading';
     return 'available';
   };
 
-  const getButtonText = (status: string) => {
+  const renderActionButton = (app: typeof availableApps[0]) => {
+    const status = getAppStatus(app.id);
+    
     switch (status) {
-      case 'installed': return 'ZAINSTALOWANE';
-      case 'downloading': return 'POBIERANIE...';
-      case 'purchased': return 'POBIERZ';
-      default: return 'KUP TERAZ';
-    }
-  };
-
-  const getButtonIcon = (status: string) => {
-    switch (status) {
-      case 'installed': return Check;
-      case 'downloading': return Loader;
-      case 'purchased': return Download;
-      default: return ShoppingCart;
+      case 'installed':
+        return (
+          <div className="flex items-center gap-2 px-4 py-2 bg-green-600/20 border border-green-500/30 rounded-xl text-green-400">
+            <CheckCircle size={16} />
+            <span className="text-sm font-medium">Zainstalowana</span>
+          </div>
+        );
+      
+      case 'purchased':
+        return (
+          <button
+            onClick={() => handleDownload(app.id)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 hover:bg-blue-600/30 transition-all duration-200"
+          >
+            <Download size={16} />
+            <span className="text-sm font-medium">Pobierz</span>
+          </button>
+        );
+      
+      case 'downloading':
+        return (
+          <div className="flex items-center gap-2 px-4 py-2 bg-purple-600/20 border border-purple-500/30 rounded-xl text-purple-400">
+            <Loader size={16} className="animate-spin" />
+            <span className="text-sm font-medium">Pobieranie...</span>
+          </div>
+        );
+      
+      default:
+        return (
+          <button
+            onClick={() => handlePurchase(app.id, app.price)}
+            disabled={orgData.crypto_balance < app.price}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+              orgData.crypto_balance >= app.price
+                ? 'bg-orange-600/20 border border-orange-500/30 text-orange-400 hover:bg-orange-600/30'
+                : 'bg-gray-600/20 border border-gray-500/30 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            <ShoppingCart size={16} />
+            <span>Kup za {app.price} COIN</span>
+            {orgData.crypto_balance < app.price && <AlertCircle size={14} />}
+          </button>
+        );
     }
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-white/10">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onHome}
-            className="text-white hover:bg-white/10 rounded-full bg-black/40 backdrop-blur-md border border-white/20"
-          >
-            <ArrowLeft size={20} />
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-cyan-600 rounded-xl flex items-center justify-center">
-              <Download className="text-white" size={20} />
+    <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-black to-blue-900/10"></div>
+      
+      <div className="relative z-10 h-full flex flex-col">
+        {/* Header */}
+        <div className="p-8 pb-4">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Sklep z aplikacjami</h1>
+              <p className="text-white/60">Rozszerz funkcjonalność swojego tabletu</p>
             </div>
-            <h1 className="text-xl font-medium">Sklep z Aplikacjami</h1>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
-            <div className="flex items-center gap-2">
-              <Bitcoin className="text-yellow-400" size={16} />
-              <span className="text-yellow-400 font-medium">{userCrypto.toFixed(2)} VCASH</span>
+            <div className="bg-black/40 backdrop-blur-sm rounded-2xl px-6 py-3 border border-white/20">
+              <div className="text-center">
+                <p className="text-white/60 text-sm">Saldo krypto</p>
+                <p className="text-yellow-400 font-bold text-xl">{orgData.crypto_balance.toFixed(2)} COIN</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="p-6 space-y-6 h-[calc(100%-5rem)]">
-        <ScrollArea className="h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pr-4">
+        {/* Apps Grid */}
+        <div className="flex-1 px-8 pb-8 overflow-y-auto custom-scrollbar">
+          <div className="grid grid-cols-1 gap-6">
             {availableApps.map((app) => {
-              const status = getAppStatus(app);
-              const ButtonIcon = getButtonIcon(status);
-              
+              const status = getAppStatus(app.id);
               return (
-                <div key={app.id} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 rounded-3xl p-8 transition-all duration-300 shadow-lg">
-                  <div className="flex flex-col items-center text-center space-y-6">
-                    {/* App Icon */}
-                    <div className="relative">
-                      <img
-                        src={app.icon}
-                        alt={app.name}
-                        className="w-20 h-20 rounded-2xl object-cover shadow-lg"
-                      />
-                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                        <ButtonIcon size={12} className={`text-white ${status === 'downloading' ? 'animate-spin' : ''}`} />
+                <div
+                  key={app.id}
+                  className="bg-black/40 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:bg-black/60 transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-16 h-16 ${app.color} rounded-2xl flex items-center justify-center`}>
+                        <app.icon size={28} className="text-white" />
                       </div>
-                    </div>
-
-                    {/* App Info */}
-                    <div className="space-y-3">
                       <div>
-                        <h3 className="font-bold text-white text-lg mb-1">{app.name}</h3>
-                        <p className="text-white/60 text-sm">{app.developer}</p>
-                      </div>
-
-                      <p className="text-white/80 text-sm leading-relaxed">
-                        {app.description}
-                      </p>
-
-                      {/* App Stats */}
-                      <div className="flex items-center justify-center gap-4 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Star size={12} className="text-yellow-400 fill-current" />
-                          <span className="text-white/80 font-medium">{app.rating}</span>
+                        <h3 className="text-xl font-bold text-white mb-1">{app.name}</h3>
+                        <p className="text-white/60 text-sm">{app.description}</p>
+                        <div className="flex items-center gap-4 mt-2">
+                          <span className="text-yellow-400 font-bold">
+                            {status === 'available' ? `${app.price} COIN` : 'Zakupiono'}
+                          </span>
+                          {status === 'installed' && (
+                            <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded-full">
+                              Zainstalowana
+                            </span>
+                          )}
+                          {status === 'purchased' && (
+                            <span className="text-blue-400 text-xs bg-blue-500/20 px-2 py-1 rounded-full">
+                              Gotowa do pobrania
+                            </span>
+                          )}
                         </div>
-                        <div className="w-px h-3 bg-white/20"></div>
-                        <div className="flex items-center gap-1">
-                          <Download size={12} className="text-white/60" />
-                          <span className="text-white/60">{app.downloads.toLocaleString()}</span>
-                        </div>
-                        <div className="w-px h-3 bg-white/20"></div>
-                        <div className="text-white/60">{app.size}</div>
                       </div>
                     </div>
-
-                    {/* Price and Purchase */}
-                    <div className="w-full space-y-4">
-                      {status !== 'installed' && status !== 'purchased' && (
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Bitcoin size={20} className="text-yellow-400" />
-                            <span className="text-2xl font-bold text-yellow-400">{app.price}</span>
-                            <span className="text-sm text-yellow-400/80">VCASH</span>
-                          </div>
-                        </div>
-                      )}
-
-                      <Button
-                        onClick={() => status === 'purchased' ? handleDownload(app) : handlePurchase(app)}
-                        disabled={status === 'installed' || status === 'downloading'}
-                        className={`w-full rounded-2xl font-bold py-6 text-lg transition-all duration-300 ${
-                          status === 'installed'
-                            ? 'bg-green-600/50 hover:bg-green-600/70 text-green-200 cursor-not-allowed border border-green-500/30'
-                            : status === 'downloading'
-                            ? 'bg-blue-600/50 hover:bg-blue-600/70 text-blue-200 cursor-not-allowed border border-blue-500/30'
-                            : status === 'purchased'
-                            ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg border border-green-500/30'
-                            : userCrypto < app.price
-                            ? 'bg-gray-600/50 hover:bg-gray-600/70 text-gray-300 cursor-not-allowed border border-gray-500/30'
-                            : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg border border-cyan-500/30'
-                        }`}
-                      >
-                        {status === 'downloading' ? (
-                          <div className="flex items-center gap-2">
-                            <Loader size={20} className="animate-spin" />
-                            {getButtonText(status)}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <ButtonIcon size={20} />
-                            {getButtonText(status)}
-                          </div>
-                        )}
-                      </Button>
-                    </div>
+                    
+                    {renderActionButton(app)}
                   </div>
                 </div>
               );
             })}
           </div>
-        </ScrollArea>
-      </div>
 
-      {/* Purchase Confirmation Dialog */}
-      <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
-        <DialogContent className="bg-gray-900 border-white/20 text-white max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Potwierdź zakup</DialogTitle>
-            <DialogDescription className="text-white/80">
-              Czy na pewno chcesz kupić aplikację {selectedApp?.name}?
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedApp && (
-            <div className="space-y-4 py-4">
-              <div className="flex items-center gap-4">
-                <img
-                  src={selectedApp.icon}
-                  alt={selectedApp.name}
-                  className="w-16 h-16 rounded-xl object-cover"
-                />
-                <div>
-                  <h3 className="font-bold text-lg">{selectedApp.name}</h3>
-                  <p className="text-white/60 text-sm">{selectedApp.developer}</p>
-                </div>
-              </div>
-              
-              <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-                <div className="flex justify-between items-center">
-                  <span className="text-white/80">Koszt:</span>
-                  <div className="flex items-center gap-2">
-                    <Bitcoin size={16} className="text-yellow-400" />
-                    <span className="text-yellow-400 font-bold">{selectedApp.price} VCASH</span>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-white/80">Twoje saldo:</span>
-                  <div className="flex items-center gap-2">
-                    <Bitcoin size={16} className="text-yellow-400" />
-                    <span className="text-yellow-400 font-bold">{userCrypto.toFixed(2)} VCASH</span>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-white/10">
-                  <span className="text-white/80">Po zakupie:</span>
-                  <div className="flex items-center gap-2">
-                    <Bitcoin size={16} className="text-yellow-400" />
-                    <span className="text-yellow-400 font-bold">{(userCrypto - selectedApp.price).toFixed(2)} VCASH</span>
-                  </div>
-                </div>
-              </div>
+          {/* Info section */}
+          <div className="mt-8 bg-blue-900/20 border border-blue-500/30 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-blue-400 mb-3">Informacje o zakupach</h3>
+            <div className="space-y-2 text-sm text-white/80">
+              <p>• Aplikacje kupujesz za kryptowaluty COIN</p>
+              <p>• Po zakupie możesz pobrać aplikację w dowolnym momencie</p>
+              <p>• Zainstalowane aplikacje są dostępne na ekranie głównym</p>
+              <p>• Zakupione aplikacje są przypisane do Twojej organizacji</p>
             </div>
-          )}
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowPurchaseDialog(false)}
-              className="border-white/20 text-white hover:bg-white/10 bg-black/40 backdrop-blur-md"
-            >
-              Anuluj
-            </Button>
-            <Button
-              onClick={confirmPurchase}
-              disabled={!selectedApp || userCrypto < selectedApp.price}
-              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white"
-            >
-              Kup za {selectedApp?.price} VCASH
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

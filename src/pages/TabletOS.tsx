@@ -21,7 +21,7 @@ const TabletOS = () => {
   const [installedApps, setInstalledApps] = useState<AppType[]>(['finance', 'members', 'transactions', 'orders', 'settings', 'stats', 'apps']);
   const [purchasedApps, setPurchasedApps] = useState<AppType[]>([]);
   
-  // TODO: Replace with database integration
+  // TODO: Replace with Lua/SQL integration
   const [orgData, setOrgData] = useState({
     name: 'Ballas',
     rank: 3,
@@ -97,13 +97,13 @@ const TabletOS = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center overflow-hidden">
+    <div className="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
       <div className="relative">
-        {/* Tablet Frame - Full screen without clipping */}
-        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3rem] p-3 shadow-2xl border border-gray-700">
-          {/* Screen - No padding to avoid inner borders */}
-          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[2.5rem] overflow-hidden relative border border-gray-800">
-            {/* Status Bar - iPad style */}
+        {/* Tablet Frame - Thinner borders */}
+        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[2.5rem] p-2 shadow-2xl border border-gray-700">
+          {/* Screen */}
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[2rem] overflow-hidden relative border border-gray-800">
+            {/* Status Bar */}
             <div className="flex justify-between items-center px-6 py-3 text-white text-sm bg-black/20 backdrop-blur-sm border-b border-white/5 relative z-30">
               <div className="flex items-center gap-1">
                 <div className="w-1 h-1 bg-white/80 rounded-full"></div>
@@ -132,7 +132,7 @@ const TabletOS = () => {
               </div>
             </div>
             
-            {/* Back Button - Top Left */}
+            {/* Back Button */}
             {currentApp !== 'home' && (
               <div className="absolute top-20 left-6 z-40">
                 <button
@@ -144,14 +144,14 @@ const TabletOS = () => {
               </div>
             )}
             
-            {/* App Content - Full height minus status bar only */}
+            {/* App Content */}
             <div className="h-[calc(100%-3.5rem)] relative">
               {renderCurrentApp()}
             </div>
 
             {/* Organization Info Bar - Only on home screen */}
             {currentApp === 'home' && (
-              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
+              <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
                 <div className="bg-black/60 backdrop-blur-sm rounded-xl px-6 py-2 border border-white/20">
                   <div className="flex items-center gap-4 text-white text-sm">
                     <span className="text-white/60">Organizacja:</span>
