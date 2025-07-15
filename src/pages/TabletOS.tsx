@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
 import FinanceApp from '../components/tablet/apps/FinanceApp';
 import MembersApp from '../components/tablet/apps/MembersApp';
@@ -34,6 +35,19 @@ const TabletOS = () => {
 
   const goHome = () => {
     setCurrentApp('home');
+  };
+
+  const getRankName = (rankNumber: number) => {
+    const ranks = {
+      1: 'CZŁONEK',
+      2: 'CZŁONEK',
+      3: 'STARSZY CZŁONEK',
+      4: 'STARSZY CZŁONEK',
+      5: 'ZASTĘPCA',
+      6: 'ZASTĘPCA',
+      7: 'SZEF'
+    };
+    return ranks[rankNumber as keyof typeof ranks] || 'CZŁONEK';
   };
 
   const renderCurrentApp = () => {
@@ -96,19 +110,43 @@ const TabletOS = () => {
               </div>
             </div>
             
-            {/* Notification System */}
-            <div className="relative">
+            {/* Back Button - Top Left */}
+            {currentApp !== 'home' && (
+              <div className="absolute top-20 left-6 z-50">
+                <button
+                  onClick={goHome}
+                  className="bg-black/40 backdrop-blur-md border border-white/20 rounded-2xl p-3 hover:bg-black/60 transition-all duration-200 shadow-2xl"
+                >
+                  <ArrowLeft size={20} className="text-white" />
+                </button>
+              </div>
+            )}
+
+            {/* Notification System - Top Right */}
+            <div className="absolute top-20 right-6 z-50">
               <NotificationSystem />
-              
-              {/* App Content */}
-              <div className="h-[calc(100vh-12rem)]">
-                {renderCurrentApp()}
+            </div>
+            
+            {/* App Content */}
+            <div className="h-[calc(100vh-12rem)]">
+              {renderCurrentApp()}
+            </div>
+
+            {/* Organization Info Bar - Bottom */}
+            <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2">
+              <div className="bg-black/60 backdrop-blur-sm rounded-xl px-6 py-2 border border-white/20">
+                <div className="flex items-center gap-4 text-white text-sm">
+                  <span className="text-white/60">Organizacja:</span>
+                  <span className="font-medium">{orgData.name}</span>
+                  <div className="w-px h-4 bg-white/20"></div>
+                  <span className="text-blue-400 font-medium">{getRankName(orgData.rank)}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* Home Button - iPhone style bar */}
+        {/* Home Button - iPhone style bar under organization info */}
         <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
           <button
             onClick={goHome}

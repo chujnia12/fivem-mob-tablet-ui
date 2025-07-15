@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Download, Star, Search, Bitcoin } from 'lucide-react';
+import { ArrowLeft, Download, Star, Bitcoin } from 'lucide-react';
 import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 
@@ -15,7 +14,6 @@ interface AppsAppProps {
 }
 
 const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
-  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
 
   // Fikcyjne kryptowaluty z GTA 5
@@ -26,7 +24,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
     {
       id: 'zlecenia',
       name: 'Zlecenia Pro',
-      description: 'Zaawansowany system zarządzania zleceniami organizacji',
+      description: 'Zaawansowany system zarządzania zleceniami organizacji przestępczej',
       rating: 4.8,
       downloads: 15420,
       price: 2.5,
@@ -38,7 +36,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
     {
       id: 'kryptowaluty',
       name: 'CryptoVault Pro',
-      description: 'Zaawansowany portfel kryptowalut z funkcjami prania',
+      description: 'Zaawansowany portfel kryptowalut z funkcjami prania pieniędzy',
       rating: 4.9,
       downloads: 23450,
       price: 5.0,
@@ -50,7 +48,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
     {
       id: 'napady',
       name: 'Heist Planner Pro',
-      description: 'Planowanie i koordynacja skomplikowanych operacji',
+      description: 'Planowanie i koordynacja skomplikowanych operacji kryminalnych',
       rating: 4.7,
       downloads: 12340,
       price: 7.5,
@@ -61,12 +59,6 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
     }
   ];
 
-  const filteredApps = availableApps.filter(app => {
-    const matchesSearch = app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         app.description.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
-
   const handlePurchase = (app: typeof availableApps[0]) => {
     if (app.price === 0) {
       toast({
@@ -76,12 +68,12 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
     } else if (userCrypto >= app.price) {
       toast({
         title: "Zakupiono aplikację",
-        description: `${app.name} została kupiona za ${app.price} BTC`,
+        description: `${app.name} została kupiona za ${app.price} VCASH`,
       });
     } else {
       toast({
         title: "Niewystarczające środki",
-        description: `Potrzebujesz ${app.price} BTC aby kupić ${app.name}`,
+        description: `Potrzebujesz ${app.price} VCASH aby kupić ${app.name}`,
         variant: "destructive",
       });
     }
@@ -111,38 +103,25 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
           <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
             <div className="flex items-center gap-2">
               <Bitcoin className="text-yellow-400" size={16} />
-              <span className="text-yellow-400 font-medium">{userCrypto.toFixed(2)} BTC</span>
+              <span className="text-yellow-400 font-medium">{userCrypto.toFixed(2)} VCASH</span>
             </div>
           </div>
         </div>
       </div>
 
       <div className="p-6 space-y-6 h-[calc(100%-5rem)]">
-        {/* Search */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60" size={20} />
-            <Input
-              placeholder="Szukaj aplikacji..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/60 rounded-xl"
-            />
-          </div>
-        </div>
-
         {/* Apps Grid */}
-        <ScrollArea className="h-[calc(100%-8rem)]">
+        <ScrollArea className="h-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pr-4">
-            {filteredApps.map((app) => (
-              <div key={app.id} className="group bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 rounded-3xl p-8 hover:from-white/15 hover:to-white/10 hover:border-white/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+            {availableApps.map((app) => (
+              <div key={app.id} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 rounded-3xl p-8 transition-all duration-300 shadow-lg">
                 <div className="flex flex-col items-center text-center space-y-6">
                   {/* App Icon */}
                   <div className="relative">
                     <img
                       src={app.icon}
                       alt={app.name}
-                      className="w-20 h-20 rounded-2xl object-cover shadow-lg group-hover:shadow-xl transition-shadow duration-300"
+                      className="w-20 h-20 rounded-2xl object-cover shadow-lg"
                     />
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
                       <Download size={12} className="text-white" />
@@ -156,7 +135,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
                       <p className="text-white/60 text-sm">{app.developer}</p>
                     </div>
 
-                    <p className="text-white/80 text-sm leading-relaxed line-clamp-3">
+                    <p className="text-white/80 text-sm leading-relaxed">
                       {app.description}
                     </p>
 
@@ -185,6 +164,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
                         <div className="flex items-center justify-center gap-2">
                           <Bitcoin size={20} className="text-yellow-400" />
                           <span className="text-2xl font-bold text-yellow-400">{app.price}</span>
+                          <span className="text-sm text-yellow-400/80">VCASH</span>
                         </div>
                       )}
                     </div>
@@ -195,7 +175,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
                       className={`w-full rounded-2xl font-bold py-6 text-lg transition-all duration-300 ${
                         app.price > 0 && userCrypto < app.price
                           ? 'bg-gray-600/50 hover:bg-gray-600/70 text-gray-300 cursor-not-allowed border border-gray-500/30'
-                          : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl border border-cyan-500/30'
+                          : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg border border-cyan-500/30'
                       }`}
                     >
                       {app.price === 0 ? 'POBIERZ' : 'KUP TERAZ'}

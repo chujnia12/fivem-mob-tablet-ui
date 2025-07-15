@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Bell, AlertTriangle, CheckCircle, Info, Skull } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -83,7 +82,7 @@ const NotificationSystem = () => {
           try {
             const audio = new Audio();
             audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTuU2O/HeB4F';
-            audio.volume = 0.5;
+            audio.volume = 0.3;
             audio.play().catch(() => {}); // Ignoruj błędy odtwarzania
           } catch (e) {}
         }
@@ -138,7 +137,7 @@ const NotificationSystem = () => {
   };
 
   return (
-    <div className="absolute top-6 left-6 z-50">
+    <div className="relative">
       {/* Notification Bell */}
       <button
         onClick={() => setShowNotifications(!showNotifications)}
@@ -154,7 +153,7 @@ const NotificationSystem = () => {
 
       {/* Notifications Panel */}
       {showNotifications && (
-        <div className="absolute top-full left-0 mt-3 w-96 bg-black/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
+        <div className="absolute top-full right-0 mt-3 w-96 bg-black/90 backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl overflow-hidden animate-fade-in">
           <div className="p-4 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
             <div className="flex items-center justify-between">
               <h3 className="text-white font-medium text-lg">Powiadomienia</h3>
