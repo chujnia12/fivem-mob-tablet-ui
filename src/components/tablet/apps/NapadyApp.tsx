@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ArrowLeft, Skull, Bitcoin, Clock, Star, MapPin, Users, Shield, Target, Crosshair } from 'lucide-react';
+import { ArrowLeft, Skull, TrendingUp, Clock, Star, MapPin, Users, Shield, Target, Crosshair } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { ScrollArea } from '../../ui/scroll-area';
 
@@ -13,7 +12,14 @@ interface NapadyAppProps {
 
 const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
   const [selectedContract, setSelectedContract] = useState<string | null>(null);
-  const [userCrypto, setUserCrypto] = useState(2.34); // TODO: Fetch from database
+  
+  // TODO: Fetch from database - crypto_wallet table
+  const userCrypto = {
+    LCOIN: 5.34,
+    VCASH: 12.7,
+    SANCOIN: 23.4,
+    total: 15.75 // Łączna wartość w USD
+  };
 
   // TODO: Fetch from database - crypto_contracts table
   const contracts = [
@@ -23,11 +29,10 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       target: 'Carlos "El Jefe" Rodriguez',
       location: 'Downtown Los Santos',
       difficulty: 'Legendary',
-      reward: 15.5,
-      currency: 'BTC',
+      reward: { amount: 8.5, currency: 'LCOIN', icon: '🏛️' },
       timeLimit: '24h',
       description: 'Zlikwiduj lidera konkurencyjnej organizacji. Wysoki poziom ochrony.',
-      requirements: ['Minimum 5.0 BTC', 'Ranga: ZASTĘPCA+', 'Doświadczenie w eliminacjach'],
+      requirements: ['Minimum 2.0 LCOIN', 'Ranga: ZASTĘPCA+', 'Doświadczenie w eliminacjach'],
       riskLevel: 'Bardzo wysokie',
       success_rate: '35%',
       participants: 2,
@@ -40,11 +45,10 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       target: 'Fleeca Bank - Main Vault',
       location: 'Vinewood',
       difficulty: 'Epic',
-      reward: 8.2,
-      currency: 'BTC',
+      reward: { amount: 15.2, currency: 'VCASH', icon: '🌴' },
       timeLimit: '48h',
       description: 'Skoordynowany napad na główny skarbiec banku. Wymagana precyzja.',
-      requirements: ['Minimum 3.0 BTC', 'Ranga: STARSZY CZŁONEK+', 'Zespół 4 osób'],
+      requirements: ['Minimum 5.0 VCASH', 'Ranga: STARSZY CZŁONEK+', 'Zespół 4 osób'],
       riskLevel: 'Wysokie',
       success_rate: '60%',
       participants: 1,
@@ -57,11 +61,10 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       target: 'Biker Gang Warehouse',
       location: 'Sandy Shores',
       difficulty: 'Rare',
-      reward: 4.7,
-      currency: 'BTC',
+      reward: { amount: 25.7, currency: 'SANCOIN', icon: '🏔️' },
       timeLimit: '72h',
       description: 'Zniszcz magazyn konkurencyjnej grupy i ukradnij ich zapasy.',
-      requirements: ['Minimum 1.5 BTC', 'Ranga: CZŁONEK+', 'Doświadczenie w sabotażu'],
+      requirements: ['Minimum 8.0 SANCOIN', 'Ranga: CZŁONEK+', 'Doświadczenie w sabotażu'],
       riskLevel: 'Średnie',
       success_rate: '75%',
       participants: 3,
@@ -74,11 +77,10 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       target: 'Biznesmen - Marcus Sterling',
       location: 'Rockford Hills',
       difficulty: 'Epic',
-      reward: 12.0,
-      currency: 'BTC',
+      reward: { amount: 6.0, currency: 'LCOIN', icon: '🏛️' },
       timeLimit: '18h',
       description: 'Porwaj wpływowego biznesmena dla okupu. Operacja kidnappingu.',
-      requirements: ['Minimum 4.0 BTC', 'Ranga: ZASTĘPCA+', 'Doświadczenie w porwaniach'],
+      requirements: ['Minimum 1.5 LCOIN', 'Ranga: ZASTĘPCA+', 'Doświadczenie w porwaniach'],
       riskLevel: 'Bardzo wysokie',
       success_rate: '45%',
       participants: 0,
@@ -91,11 +93,10 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       target: 'Crypto Exchange Server',
       location: 'Mirror Park',
       difficulty: 'Legendary',
-      reward: 25.8,
-      currency: 'BTC',
+      reward: { amount: 45.8, currency: 'VCASH', icon: '🌴' },
       timeLimit: '6h',
       description: 'Włamania do serwerów giełdy kryptowalut i kradzież środków.',
-      requirements: ['Minimum 8.0 BTC', 'Ranga: SZEF', 'Ekspert od hackingu'],
+      requirements: ['Minimum 20.0 VCASH', 'Ranga: SZEF', 'Ekspert od hackingu'],
       riskLevel: 'Ekstremalne',
       success_rate: '20%',
       participants: 0,
@@ -134,7 +135,11 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
     }
   };
 
-  const canAfford = (price: number) => userCrypto >= price;
+  const canAfford = (reward: typeof contracts[0]['reward']) => {
+    const userAmount = userCrypto[reward.currency as keyof typeof userCrypto];
+    const requiredAmount = reward.amount * 0.1; // 10% zaliczka
+    return typeof userAmount === 'number' && userAmount >= requiredAmount;
+  };
 
   return (
     <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black text-white">
@@ -154,11 +159,23 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
             <h1 className="text-xl font-medium">Kontrakty Krypto</h1>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
+        <div className="flex items-center gap-2">
+          <div className="bg-white/5 backdrop-blur-sm px-3 py-2 rounded-xl border border-white/10">
             <div className="flex items-center gap-2">
-              <Bitcoin className="text-yellow-400" size={16} />
-              <span className="text-yellow-400 font-medium">{userCrypto.toFixed(3)} BTC</span>
+              <span className="text-2xl">🏛️</span>
+              <span className="text-yellow-400 font-medium">{userCrypto.LCOIN.toFixed(2)} LCOIN</span>
+            </div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm px-3 py-2 rounded-xl border border-white/10">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🌴</span>
+              <span className="text-green-400 font-medium">{userCrypto.VCASH.toFixed(2)} VCASH</span>
+            </div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm px-3 py-2 rounded-xl border border-white/10">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🏔️</span>
+              <span className="text-blue-400 font-medium">{userCrypto.SANCOIN.toFixed(1)} SANCOIN</span>
             </div>
           </div>
         </div>
@@ -167,7 +184,7 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
       <div className="flex h-[calc(100%-5rem)]">
         {/* Contracts List */}
         <div className="flex-1 p-6">
-          <ScrollArea className="h-full rounded-2xl">
+          <ScrollArea className="h-full">
             <div className="space-y-4 pr-4">
               {contracts.map((contract) => (
                 <div key={contract.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
@@ -200,9 +217,9 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div className="bg-white/5 rounded-xl p-3">
                           <div className="flex items-center gap-2 mb-2">
-                            <Bitcoin size={16} className="text-yellow-400" />
+                            <span className="text-2xl">{contract.reward.icon}</span>
                             <span className="text-yellow-400 font-bold text-lg">
-                              {contract.reward} {contract.currency}
+                              {contract.reward.amount} {contract.reward.currency}
                             </span>
                           </div>
                           <div className="text-white/60 text-sm">Nagroda za kontrakt</div>
@@ -267,14 +284,14 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
                             </Button>
                             <Button 
                               className={`rounded-xl ${
-                                canAfford(contract.reward * 0.1) 
+                                canAfford(contract.reward)
                                   ? 'bg-pink-600 hover:bg-pink-700 text-white' 
                                   : 'bg-gray-600 hover:bg-gray-700 text-gray-300 cursor-not-allowed'
                               }`}
-                              disabled={!canAfford(contract.reward * 0.1)}
+                              disabled={!canAfford(contract.reward)}
                             >
                               <Crosshair size={16} className="mr-2" />
-                              PRZYJMIJ ({(contract.reward * 0.1).toFixed(2)} BTC)
+                              PRZYJMIJ ({(contract.reward.amount * 0.1).toFixed(2)} {contract.reward.currency})
                             </Button>
                           </div>
                         )}
@@ -282,7 +299,7 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
                         {contract.status === 'in_progress' && (
                           <Button 
                             variant="outline" 
-                            className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 rounded-xl"
+                            className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 bg-transparent rounded-xl"
                           >
                             KONTYNUUJ
                           </Button>
@@ -318,10 +335,10 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
                 </div>
 
                 <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-yellow-400 mb-1">
-                    {contracts.reduce((sum, c) => sum + c.reward, 0).toFixed(1)} BTC
+                  <div className="text-2xl font-bold text-purple-400 mb-1">
+                    {contracts.length}
                   </div>
-                  <div className="text-white/60 text-sm">Łączna wartość nagród</div>
+                  <div className="text-white/60 text-sm">Łączna liczba</div>
                 </div>
               </div>
 
@@ -341,19 +358,34 @@ const NapadyApp: React.FC<NapadyAppProps> = ({ orgData, onHome }) => {
               </div>
 
               <div className="space-y-3">
-                <h4 className="font-medium">Twoje konto</h4>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Bitcoin className="text-yellow-400" size={20} />
-                    <span className="text-yellow-400 font-bold text-lg">
-                      {userCrypto.toFixed(3)} BTC
-                    </span>
+                <h4 className="font-medium">Twoje saldo krypto</h4>
+                <div className="space-y-2">
+                  <div className="bg-white/5 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🏛️</span>
+                      <span className="text-sm">LCOIN</span>
+                    </div>
+                    <span className="text-yellow-400 font-medium">{userCrypto.LCOIN.toFixed(2)}</span>
                   </div>
-                  <div className="text-white/60 text-sm mb-3">Dostępne środki</div>
+                  <div className="bg-white/5 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🌴</span>
+                      <span className="text-sm">VCASH</span>
+                    </div>
+                    <span className="text-green-400 font-medium">{userCrypto.VCASH.toFixed(2)}</span>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🏔️</span>
+                      <span className="text-sm">SANCOIN</span>
+                    </div>
+                    <span className="text-blue-400 font-medium">{userCrypto.SANCOIN.toFixed(1)}</span>
+                  </div>
+                  
                   <Button 
                     size="sm" 
                     variant="outline"
-                    className="w-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 rounded-xl"
+                    className="w-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 bg-transparent rounded-xl mt-3"
                   >
                     DOŁADUJ KONTO
                   </Button>

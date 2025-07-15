@@ -1,13 +1,15 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Grid3X3, Download, Star, Search, Filter, Smartphone, Users, DollarSign, Shield } from 'lucide-react';
+import { ArrowLeft, Grid3X3, Download, Star, Search, Smartphone, Users, DollarSign, Shield, Bitcoin } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { ScrollArea } from '../../ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 interface AppsAppProps {
   orgData: {
     name: string;
+    crypto_balance?: number;
   };
   onHome: () => void;
 }
@@ -15,6 +17,10 @@ interface AppsAppProps {
 const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
+
+  // Fikcyjne kryptowaluty z GTA 5
+  const userCrypto = 15.75; // TODO: Fetch from database - crypto_wallet table
 
   // TODO: Fetch from database - available_apps table
   const availableApps = [
@@ -38,7 +44,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
       category: 'tools',
       rating: 4.6,
       downloads: 8930,
-      price: 2500,
+      price: 2.5,
       installed: true,
       icon: 'https://images.unsplash.com/photo-1569336415962-a4bd9f69ed03?w=100&h=100&fit=crop',
       developer: 'Underground Maps',
@@ -51,7 +57,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
       category: 'finance',
       rating: 4.9,
       downloads: 23450,
-      price: 5000,
+      price: 5.0,
       installed: false,
       icon: 'https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=100&h=100&fit=crop',
       developer: 'Anonymous Finance',
@@ -64,7 +70,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
       category: 'management',
       rating: 4.2,
       downloads: 6780,
-      price: 1500,
+      price: 1.5,
       installed: true,
       icon: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=100&h=100&fit=crop',
       developer: 'Surveillance Systems',
@@ -77,7 +83,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
       category: 'tools',
       rating: 4.7,
       downloads: 12340,
-      price: 7500,
+      price: 7.5,
       installed: false,
       icon: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=100&h=100&fit=crop',
       developer: 'Criminal Masterminds',
@@ -90,7 +96,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
       category: 'security',
       rating: 4.4,
       downloads: 18670,
-      price: 3000,
+      price: 3.0,
       installed: false,
       icon: 'https://images.unsplash.com/photo-1593642532842-98d0fd5ebc1a?w=100&h=100&fit=crop',
       developer: 'Radio Interceptors',
@@ -103,7 +109,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
       category: 'finance',
       rating: 4.3,
       downloads: 9450,
-      price: 10000,
+      price: 10.0,
       installed: true,
       icon: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=100&h=100&fit=crop',
       developer: 'Laundry Solutions Inc.',
@@ -143,6 +149,26 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
 
   const installedCount = availableApps.filter(app => app.installed).length;
 
+  const handlePurchase = (app: typeof availableApps[0]) => {
+    if (app.price === 0) {
+      toast({
+        title: "Pobrano aplikację",
+        description: `${app.name} została pobrana pomyślnie`,
+      });
+    } else if (userCrypto >= app.price) {
+      toast({
+        title: "Zakupiono aplikację",
+        description: `${app.name} została kupiona za ${app.price} BTC`,
+      });
+    } else {
+      toast({
+        title: "Niewystarczające środki",
+        description: `Potrzebujesz ${app.price} BTC aby kupić ${app.name}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black text-white">
       {/* Header */}
@@ -161,36 +187,42 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
             <h1 className="text-xl font-medium">Sklep z Aplikacjami</h1>
           </div>
         </div>
-        <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
-          <span className="text-white/60 text-sm">Zainstalowane: </span>
-          <span className="text-cyan-400 font-medium">{installedCount}</span>
+        <div className="flex items-center gap-4">
+          <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
+            <div className="flex items-center gap-2">
+              <Bitcoin className="text-yellow-400" size={16} />
+              <span className="text-yellow-400 font-medium">{userCrypto.toFixed(2)} BTC</span>
+            </div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/10">
+            <span className="text-white/60 text-sm">Zainstalowane: </span>
+            <span className="text-cyan-400 font-medium">{installedCount}</span>
+          </div>
         </div>
       </div>
 
       <div className="flex h-[calc(100%-5rem)]">
         {/* Categories Sidebar */}
         <div className="w-64 bg-white/5 backdrop-blur-sm border-r border-white/10">
-          <ScrollArea className="h-full">
-            <div className="p-4">
-              <h3 className="text-sm font-medium text-white/60 mb-4 uppercase tracking-wider">Kategorie</h3>
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-200 ${
-                      selectedCategory === category.id
-                        ? 'bg-white/10 text-white border border-white/20'
-                        : 'text-white/70 hover:bg-white/5 hover:text-white'
-                    }`}
-                  >
-                    <category.icon size={18} className="text-cyan-400" />
-                    <span className="font-medium">{category.name}</span>
-                  </button>
-                ))}
-              </div>
+          <div className="p-4">
+            <h3 className="text-sm font-medium text-white/60 mb-4 uppercase tracking-wider">Kategorie</h3>
+            <div className="space-y-2">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all duration-200 ${
+                    selectedCategory === category.id
+                      ? 'bg-white/10 text-white border border-white/20'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <category.icon size={18} className="text-cyan-400" />
+                  <span className="font-medium">{category.name}</span>
+                </button>
+              ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
 
         {/* Main Content */}
@@ -209,8 +241,8 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
           </div>
 
           {/* Apps Grid */}
-          <ScrollArea className="h-[calc(100%-8rem)] rounded-2xl">
-            <div className="grid grid-cols-2 gap-4 pr-4">
+          <ScrollArea className="h-[calc(100%-8rem)]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pr-4">
               {filteredApps.map((app) => (
                 <div key={app.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-200">
                   <div className="flex items-start gap-4 mb-4">
@@ -252,7 +284,10 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
                       {app.price === 0 ? (
                         <span className="text-green-400">DARMOWA</span>
                       ) : (
-                        <span className="text-yellow-400">${app.price.toLocaleString()}</span>
+                        <div className="flex items-center gap-1">
+                          <Bitcoin size={16} className="text-yellow-400" />
+                          <span className="text-yellow-400">{app.price} BTC</span>
+                        </div>
                       )}
                     </div>
 
@@ -261,7 +296,7 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl"
+                          className="border-red-500/30 text-red-400 hover:bg-red-500/10 bg-transparent rounded-xl"
                         >
                           USUŃ
                         </Button>
@@ -275,7 +310,13 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
                     ) : (
                       <Button
                         size="sm"
-                        className="bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl"
+                        onClick={() => handlePurchase(app)}
+                        disabled={app.price > 0 && userCrypto < app.price}
+                        className={`rounded-xl ${
+                          app.price > 0 && userCrypto < app.price
+                            ? 'bg-gray-600 hover:bg-gray-700 text-gray-300 cursor-not-allowed'
+                            : 'bg-cyan-600 hover:bg-cyan-700 text-white'
+                        }`}
                       >
                         {app.price === 0 ? 'POBIERZ' : 'KUP'}
                       </Button>
@@ -283,84 +324,6 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome }) => {
                   </div>
                 </div>
               ))}
-            </div>
-          </ScrollArea>
-        </div>
-
-        {/* Stats Panel */}
-        <div className="w-80 bg-white/5 backdrop-blur-sm border-l border-white/10">
-          <ScrollArea className="h-full">
-            <div className="p-6 space-y-6">
-              <h3 className="text-lg font-medium mb-4">Statystyki Sklepu</h3>
-              
-              <div className="space-y-4">
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-cyan-400 mb-1">
-                    {availableApps.length}
-                  </div>
-                  <div className="text-white/60 text-sm">Dostępne aplikacje</div>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-green-400 mb-1">
-                    {installedCount}
-                  </div>
-                  <div className="text-white/60 text-sm">Zainstalowane</div>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-yellow-400 mb-1">
-                    ${availableApps.filter(app => app.installed && app.price > 0).reduce((sum, app) => sum + app.price, 0).toLocaleString()}
-                  </div>
-                  <div className="text-white/60 text-sm">Wydano na aplikacje</div>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-blue-400 mb-1">
-                    {availableApps.filter(app => app.price === 0).length}
-                  </div>
-                  <div className="text-white/60 text-sm">Darmowe aplikacje</div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="font-medium">Popularne kategorie</h4>
-                {categories.slice(1).map((category) => {
-                  const count = availableApps.filter(app => app.category === category.id).length;
-                  return (
-                    <div key={category.id} className="flex justify-between items-center p-3 bg-white/5 rounded-xl">
-                      <div className="flex items-center gap-2">
-                        <category.icon size={16} className="text-cyan-400" />
-                        <span className="text-sm">{category.name}</span>
-                      </div>
-                      <span className="text-white/80 font-medium">{count}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="space-y-3">
-                <h4 className="font-medium">Najlepiej oceniane</h4>
-                {availableApps
-                  .sort((a, b) => b.rating - a.rating)
-                  .slice(0, 3)
-                  .map((app) => (
-                    <div key={app.id} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                      <img
-                        src={app.icon}
-                        alt={app.name}
-                        className="w-8 h-8 rounded object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-white">{app.name}</div>
-                        <div className="flex items-center gap-1">
-                          <Star size={12} className="text-yellow-400 fill-current" />
-                          <span className="text-white/60 text-xs">{app.rating}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
             </div>
           </ScrollArea>
         </div>
