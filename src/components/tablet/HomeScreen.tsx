@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   DollarSign, 
@@ -28,6 +27,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
     hour: '2-digit', 
     minute: '2-digit' 
   });
+
+  // TODO: Fetch from jobs table to get rank name
+  const getRankName = (rankNumber: number) => {
+    const ranks = {
+      1: 'CZŁONEK',
+      2: 'CZŁONEK',
+      3: 'STARSZY CZŁONEK',
+      4: 'STARSZY CZŁONEK',
+      5: 'ZASTĘPCA',
+      6: 'ZASTĘPCA',
+      7: 'SZEF'
+    };
+    return ranks[rankNumber as keyof typeof ranks] || 'CZŁONEK';
+  };
 
   const apps = [
     { id: 'finance', name: 'Finanse', icon: DollarSign, color: 'bg-green-600' },
@@ -62,14 +75,14 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp }) => {
           ))}
         </div>
 
-        {/* Organization Info - Minimalist */}
+        {/* Organization Info - Show rank instead of balance */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
           <div className="bg-white/5 backdrop-blur-sm rounded-xl px-6 py-2 border border-white/10">
             <div className="flex items-center gap-4 text-white text-sm">
               <span className="text-white/60">Organizacja:</span>
               <span className="font-medium">{orgData.name}</span>
               <div className="w-px h-4 bg-white/20"></div>
-              <span className="text-green-400">${orgData.balance.toLocaleString()}</span>
+              <span className="text-blue-400 font-medium">{getRankName(orgData.rank)}</span>
             </div>
           </div>
         </div>

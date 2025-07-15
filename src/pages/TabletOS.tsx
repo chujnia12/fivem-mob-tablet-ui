@@ -54,19 +54,19 @@ const TabletOS = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 flex items-center justify-center p-4">
       <div className="relative">
         {/* Tablet Frame - iPad-like design */}
-        <div className="w-[1024px] h-[768px] bg-gray-800 rounded-[3rem] p-3 shadow-2xl border border-gray-700">
+        <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3rem] p-3 shadow-2xl border border-gray-700">
           {/* Screen */}
-          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[2.5rem] overflow-hidden relative">
+          <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[2.5rem] overflow-hidden relative border border-gray-800">
             {/* Status Bar - iPad style */}
-            <div className="flex justify-between items-center px-6 py-3 text-white text-sm bg-black/10">
+            <div className="flex justify-between items-center px-6 py-3 text-white text-sm bg-black/20 backdrop-blur-sm border-b border-white/5">
               <div className="flex items-center gap-1">
-                <div className="w-1 h-1 bg-white rounded-full"></div>
-                <div className="w-1 h-1 bg-white rounded-full"></div>
-                <div className="w-1 h-1 bg-white rounded-full"></div>
-                <div className="w-1 h-1 bg-white rounded-full"></div>
+                <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                <div className="w-1 h-1 bg-white/80 rounded-full"></div>
+                <div className="w-1 h-1 bg-white/80 rounded-full"></div>
                 <div className="w-2 h-2 bg-white rounded-full"></div>
               </div>
-              <div className="text-xs font-medium">
+              <div className="text-xs font-medium text-white/90">
                 {new Date().toLocaleTimeString('pl-PL', { 
                   hour: '2-digit', 
                   minute: '2-digit',
@@ -76,8 +76,8 @@ const TabletOS = () => {
                 })}
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs">100%</span>
-                <div className="w-6 h-3 border border-white/50 rounded-sm">
+                <span className="text-xs text-white/80">100%</span>
+                <div className="w-6 h-3 border border-white/40 rounded-sm">
                   <div className="w-full h-full bg-green-500 rounded-sm"></div>
                 </div>
               </div>
@@ -90,13 +90,13 @@ const TabletOS = () => {
           </div>
         </div>
         
-        {/* Home Button - iPad style */}
-        <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
+        {/* Home Button - Improved iPad style */}
+        <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2">
           <button
             onClick={goHome}
-            className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl hover:bg-gray-100 transition-all duration-200 border-2 border-gray-300"
+            className="w-14 h-14 bg-gradient-to-br from-gray-200 to-white rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl transition-all duration-300 border-2 border-gray-300 hover:scale-105 active:scale-95"
           >
-            <div className="w-4 h-4 bg-black rounded-full"></div>
+            <div className="w-5 h-5 bg-gray-800 rounded-full shadow-inner"></div>
           </button>
         </div>
       </div>
