@@ -80,7 +80,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp, installedAp
     },
     {
       id: 'apps' as AppType,
-      name: 'App Store',
+      name: 'Apps',
       icon: Calculator,
       color: 'from-cyan-500 to-cyan-600',
       isDefault: true
@@ -143,10 +143,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ orgData, onOpenApp, installedAp
                 <ContextMenuTrigger>
                   <button
                     onClick={() => onOpenApp(app.id)}
-                    className="w-20 h-20 mb-3 rounded-2xl bg-gradient-to-br shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center justify-center border border-white/10 hover:border-white/20"
-                    style={{
-                      background: `linear-gradient(135deg, ${app.color.split(' ')[1]} 0%, ${app.color.split(' ')[3]} 100%)`
-                    }}
+                    className={`w-20 h-20 mb-3 rounded-2xl bg-gradient-to-br ${app.color} shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center justify-center border border-white/10 hover:border-white/20`}
                   >
                     <app.icon size={32} className="text-white" />
                   </button>

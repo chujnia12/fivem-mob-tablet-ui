@@ -98,11 +98,11 @@ const TransactionsApp: React.FC<TransactionsAppProps> = ({ orgData, onHome }) =>
           <h1 className="text-xl font-medium">Historia Transakcji</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="ghost" className="text-white/60 hover:text-white border border-white/20 rounded-xl">
+          <Button variant="ghost" className="text-white/60 hover:text-white border border-white/20 rounded-xl hover:bg-white/10">
             <Download size={16} className="mr-2" />
             Eksportuj
           </Button>
-          <Button variant="ghost" className="text-white/60 hover:text-white border border-white/20 rounded-xl">
+          <Button variant="ghost" className="text-white/60 hover:text-white border border-white/20 rounded-xl hover:bg-white/10">
             <RefreshCw size={16} className="mr-2" />
             Odśwież
           </Button>
@@ -194,9 +194,9 @@ const TransactionsApp: React.FC<TransactionsAppProps> = ({ orgData, onHome }) =>
             </select>
             
             <Button 
-              variant="outline" 
+              variant="ghost" 
               onClick={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
-              className="border-white/20 text-white/80"
+              className="border border-white/20 text-white/80 hover:bg-white/10 hover:text-white rounded-xl"
             >
               {sortOrder === 'desc' ? '↓' : '↑'} {sortOrder === 'desc' ? 'Malejąco' : 'Rosnąco'}
             </Button>
@@ -218,7 +218,7 @@ const TransactionsApp: React.FC<TransactionsAppProps> = ({ orgData, onHome }) =>
           </div>
 
           {/* Table Body */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto custom-scrollbar">
             {/* TODO: Sync with orgmdt-finanse table - fetch transactions by job */}
             {sortedTransactions.map((transaction) => {
               const category = categories.find(c => c.id === transaction.category);
@@ -253,7 +253,7 @@ const TransactionsApp: React.FC<TransactionsAppProps> = ({ orgData, onHome }) =>
                     </span>
                   </div>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" className="text-white/60 hover:text-white p-1">
+                    <Button size="sm" variant="ghost" className="text-white/60 hover:text-white p-1 hover:bg-white/10">
                       <Trash2 size={14} />
                     </Button>
                   </div>
