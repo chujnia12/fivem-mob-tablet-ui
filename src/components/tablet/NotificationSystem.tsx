@@ -51,13 +51,13 @@ const NotificationSystem = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { toast } = useToast();
 
-  // iPhone-style notification sound
+  // iPhone-style notification sound with bell
   const playNotificationSound = () => {
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Create a more iPhone-like tri-tone sound
-      const createTone = (frequency: number, startTime: number, duration: number) => {
+      // Create iPhone-like bell sound
+      const createBellTone = (frequency: number, startTime: number, duration: number) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         
@@ -68,7 +68,7 @@ const NotificationSystem = () => {
         oscillator.type = 'sine';
         
         gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.01);
+        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.01);
         gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
         
         oscillator.start(startTime);
@@ -76,9 +76,10 @@ const NotificationSystem = () => {
       };
       
       const now = audioContext.currentTime;
-      createTone(1318.51, now, 0.2);        // E6
-      createTone(1174.66, now + 0.15, 0.2); // D6
-      createTone(987.77, now + 0.3, 0.4);   // B5
+      // Bell-like sound pattern
+      createBellTone(800, now, 0.1);
+      createBellTone(1000, now + 0.1, 0.1);
+      createBellTone(800, now + 0.2, 0.1);
       
     } catch (e) {
       console.log('Audio not supported');
@@ -88,7 +89,7 @@ const NotificationSystem = () => {
   // Symulacja nowych powiadomień
   useEffect(() => {
     const interval = setInterval(() => {
-      if (Math.random() > 0.7) { // 30% szansy co 10 sekund
+      if (Math.random() > 0.8) { // 20% szansy co 10 sekund
         const newNotification: Notification = {
           id: Date.now().toString(),
           type: ['success', 'info', 'warning'][Math.floor(Math.random() * 3)] as any,
@@ -113,7 +114,7 @@ const NotificationSystem = () => {
             variant: newNotification.type === 'error' ? 'destructive' : 'default',
           });
           
-          // Play iPhone-style sound
+          // Play iPhone-style bell sound
           playNotificationSound();
         }
       }
@@ -181,7 +182,7 @@ const NotificationSystem = () => {
         )}
       </button>
 
-      {/* Notifications Panel */}
+      {/* Notifications Panel - Positioned within tablet bounds */}
       {showNotifications && (
         <div className="absolute top-full right-0 mt-2 w-80 bg-black/95 backdrop-blur-md border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-fade-in z-50 max-h-96">
           <div className="p-3 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-blue-900/20">
@@ -212,7 +213,7 @@ const NotificationSystem = () => {
                   return (
                     <div
                       key={notification.id}
-                      className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-white/5 ${
+                      className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-white/5 relative ${
                         notification.read ? 'opacity-60' : 'shadow-lg'
                       } ${getNotificationColor(notification.type)}`}
                       onClick={() => {

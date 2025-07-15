@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft, Download, Star, Bitcoin, Check } from 'lucide-react';
+import { ArrowLeft, Download, Star, Bitcoin, Check, ShoppingCart, Loader } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { ScrollArea } from '../../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -19,17 +19,18 @@ interface AppsAppProps {
     crypto_balance?: number;
   };
   onHome: () => void;
-  onInstall: (app: string) => void;
+  onPurchase: (app: string, price: number) => boolean;
   installedApps: string[];
 }
 
-const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onInstall, installedApps }) => {
+const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onPurchase, installedApps }) => {
   const { toast } = useToast();
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
   const [selectedApp, setSelectedApp] = useState<any>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   // Fikcyjne kryptowaluty z GTA 5
-  const userCrypto = orgData.crypto_balance || 15.75; // TODO: Fetch from database - crypto_wallet table
+  const userCrypto = orgData.crypto_balance || 15.75;
 
   // TODO: Fetch from database - available_apps table
   const availableApps = [
@@ -81,16 +82,24 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onInstall, installed
     setShowPurchaseDialog(true);
   };
 
-  const confirmPurchase = () => {
+  const confirmPurchase = async () => {
     if (!selectedApp) return;
 
-    if (userCrypto >= selectedApp.price) {
-      onInstall(selectedApp.id);
-      toast({
-        title: "Zakupiono aplikację",
-        description: `${selectedApp.name} została kupiona za ${selectedApp.price} VCASH`,
-      });
+    const success = onPurchase(selectedApp.id, selectedApp.price);
+    
+    if (success) {
       setShowPurchaseDialog(false);
+      setDownloading(selectedApp.id);
+      
+      // Simulate download process
+      setTimeout(() => {
+        setDownloading(null);
+        toast({
+          title: "Aplikacja zainstalowana",
+          description: `${selectedApp.name} została pomyślnie zainstalowana`,
+        });
+      }, 3000);
+      
       setSelectedApp(null);
     } else {
       toast({
@@ -137,6 +146,8 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onInstall, installed
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 pr-4">
             {availableApps.map((app) => {
               const isInstalled = installedApps.includes(app.id);
+              const isDownloading = downloading === app.id;
+              
               return (
                 <div key={app.id} className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20 rounded-3xl p-8 transition-all duration-300 shadow-lg">
                   <div className="flex flex-col items-center text-center space-y-6">
@@ -148,7 +159,13 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onInstall, installed
                         className="w-20 h-20 rounded-2xl object-cover shadow-lg"
                       />
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                        {isInstalled ? <Check size={12} className="text-white" /> : <Download size={12} className="text-white" />}
+                        {isDownloading ? (
+                          <Loader size={12} className="text-white animate-spin" />
+                        ) : isInstalled ? (
+                          <Check size={12} className="text-white" />
+                        ) : (
+                          <ShoppingCart size={12} className="text-white" />
+                        )}
                       </div>
                     </div>
 
@@ -191,16 +208,27 @@ const AppsApp: React.FC<AppsAppProps> = ({ orgData, onHome, onInstall, installed
 
                       <Button
                         onClick={() => handlePurchase(app)}
-                        disabled={isInstalled}
+                        disabled={isInstalled || isDownloading}
                         className={`w-full rounded-2xl font-bold py-6 text-lg transition-all duration-300 ${
                           isInstalled 
                             ? 'bg-green-600/50 hover:bg-green-600/70 text-green-200 cursor-not-allowed border border-green-500/30'
+                            : isDownloading
+                            ? 'bg-blue-600/50 hover:bg-blue-600/70 text-blue-200 cursor-not-allowed border border-blue-500/30'
                             : userCrypto < app.price
                             ? 'bg-gray-600/50 hover:bg-gray-600/70 text-gray-300 cursor-not-allowed border border-gray-500/30'
                             : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg border border-cyan-500/30'
                         }`}
                       >
-                        {isInstalled ? 'ZAINSTALOWANE' : 'KUP TERAZ'}
+                        {isDownloading ? (
+                          <div className="flex items-center gap-2">
+                            <Loader size={20} className="animate-spin" />
+                            POBIERANIE...
+                          </div>
+                        ) : isInstalled ? (
+                          'ZAINSTALOWANE'
+                        ) : (
+                          'KUP TERAZ'
+                        )}
                       </Button>
                     </div>
                   </div>
