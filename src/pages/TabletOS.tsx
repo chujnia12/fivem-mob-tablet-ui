@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
@@ -29,7 +30,10 @@ const TabletOS = () => {
     rank: 3,
     id: 2,
     balance: 12329713,
-    crypto_balance: 15.75
+    crypto_balance: 15.75,
+    member_slots: 20,
+    garage_slots: 10,
+    stash_slots: 500
   });
 
   const openApp = (app: AppType) => {
