@@ -36,6 +36,29 @@ const TabletOS = () => {
     member_count: 0
   });
 
+  // Funkcja helper do wykonywania fetch w środowisku FiveM
+  const fetchNUI = async (eventName: string, data: any = {}) => {
+    try {
+      if (typeof window !== 'undefined' && window.invokeNative) {
+        // Środowisko FiveM
+        const resourceName = typeof GetParentResourceName === 'function' ? GetParentResourceName() : 'org-tablet';
+        const response = await fetch(`https://${resourceName}/${eventName}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return response;
+      } else {
+        // Środowisko deweloperskie - logujemy akcję
+        console.log(`FiveM NUI Call: ${eventName}`, data);
+        return Promise.resolve({ ok: true });
+      }
+    } catch (error) {
+      console.error(`Błąd w fetchNUI (${eventName}):`, error);
+      return Promise.reject(error);
+    }
+  };
+
   // Odbieranie danych z serwera
   useEffect(() => {
     // Nasłuchiwanie wiadomości z Lua
@@ -106,13 +129,7 @@ const TabletOS = () => {
   const purchaseApp = (app: AppType, price: number) => {
     if (orgData.crypto_balance >= price && !purchasedApps.includes(app)) {
       // Wyślij do serwera
-      if (window.invokeNative) {
-        fetch(`https://${GetParentResourceName()}/purchaseApp`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ appId: app })
-        });
-      }
+      fetchNUI('purchaseApp', { appId: app });
       
       setOrgData(prev => ({
         ...prev,
@@ -127,26 +144,12 @@ const TabletOS = () => {
   const purchaseItem = (item: string, price: number) => {
     if (orgData.crypto_balance >= price) {
       // Wyślij do serwera
-      if (window.invokeNative) {
-        if (item === 'member_slot') {
-          fetch(`https://${GetParentResourceName()}/buyMemberSlot`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-          });
-        } else if (item === 'garage_upgrade') {
-          fetch(`https://${GetParentResourceName()}/upgradeGarage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-          });
-        } else if (item === 'stash_upgrade') {
-          fetch(`https://${GetParentResourceName()}/upgradeStash`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
-          });
-        }
+      if (item === 'member_slot') {
+        fetchNUI('buyMemberSlot', {});
+      } else if (item === 'garage_upgrade') {
+        fetchNUI('upgradeGarage', {});
+      } else if (item === 'stash_upgrade') {
+        fetchNUI('upgradeStash', {});
       }
       
       setOrgData(prev => ({
