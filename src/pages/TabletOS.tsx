@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import HomeScreen from '../components/tablet/HomeScreen';
 import FinanceApp from '../components/tablet/apps/FinanceApp';
@@ -24,17 +23,61 @@ const TabletOS = () => {
   const [installedApps, setInstalledApps] = useState<AppType[]>(['finance', 'members', 'transactions', 'orders', 'settings', 'stats', 'apps', 'notes']);
   const [purchasedApps, setPurchasedApps] = useState<AppType[]>([]);
   
-  // TODO: Replace with Lua/SQL integration
+  // Dane organizacji z serwera
   const [orgData, setOrgData] = useState({
-    name: 'Ballas',
-    rank: 3,
-    id: 2,
-    balance: 12329713,
-    crypto_balance: 15.75,
-    member_slots: 20,
-    garage_slots: 10,
-    stash_slots: 500
+    name: '',
+    rank: 1,
+    id: 0,
+    balance: 0,
+    crypto_balance: 0,
+    member_slots: 10,
+    garage_slots: 5,
+    stash_slots: 1000,
+    member_count: 0
   });
+
+  // Odbieranie danych z serwera
+  useEffect(() => {
+    // Nasłuchiwanie wiadomości z Lua
+    const handleMessage = (event: MessageEvent) => {
+      const { action, orgData: serverOrgData, members, transactions, notes, jobs, vehicles, apps } = event.data;
+      
+      switch (action) {
+        case 'openTablet':
+          if (serverOrgData) {
+            setOrgData(serverOrgData);
+          }
+          break;
+        case 'updateMembers':
+          // Przekaż dane członków do odpowiedniej aplikacji
+          break;
+        case 'updateTransactions':
+          // Przekaż dane transakcji do odpowiedniej aplikacji
+          break;
+        case 'updateNotes':
+          // Przekaż dane notatek do odpowiedniej aplikacji
+          break;
+        case 'updateJobs':
+          // Przekaż dane zleceń do odpowiedniej aplikacji
+          break;
+        case 'updateVehicles':
+          // Przekaż dane pojazdów do trackera
+          break;
+        case 'updateAvailableApps':
+          if (apps) {
+            const purchased = apps.filter((app: any) => app.purchased).map((app: any) => app.id);
+            setPurchasedApps(purchased);
+          }
+          break;
+        case 'appPurchased':
+          // Dodaj aplikację do zakupionych
+          break;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const openApp = (app: AppType) => {
     setCurrentApp(app);
@@ -62,6 +105,15 @@ const TabletOS = () => {
 
   const purchaseApp = (app: AppType, price: number) => {
     if (orgData.crypto_balance >= price && !purchasedApps.includes(app)) {
+      // Wyślij do serwera
+      if (window.invokeNative) {
+        fetch(`https://${GetParentResourceName()}/purchaseApp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ appId: app })
+        });
+      }
+      
       setOrgData(prev => ({
         ...prev,
         crypto_balance: prev.crypto_balance - price
@@ -74,6 +126,29 @@ const TabletOS = () => {
 
   const purchaseItem = (item: string, price: number) => {
     if (orgData.crypto_balance >= price) {
+      // Wyślij do serwera
+      if (window.invokeNative) {
+        if (item === 'member_slot') {
+          fetch(`https://${GetParentResourceName()}/buyMemberSlot`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          });
+        } else if (item === 'garage_upgrade') {
+          fetch(`https://${GetParentResourceName()}/upgradeGarage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          });
+        } else if (item === 'stash_upgrade') {
+          fetch(`https://${GetParentResourceName()}/upgradeStash`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          });
+        }
+      }
+      
       setOrgData(prev => ({
         ...prev,
         crypto_balance: prev.crypto_balance - price
@@ -96,13 +171,12 @@ const TabletOS = () => {
 
   const getRankName = (rankNumber: number) => {
     const ranks = {
+      0: 'REKRUT',
       1: 'CZŁONEK',
-      2: 'CZŁONEK',
-      3: 'STARSZY CZŁONEK',
-      4: 'STARSZY CZŁONEK',
-      5: 'ZASTĘPCA',
-      6: 'ZASTĘPCA',
-      7: 'SZEF'
+      2: 'STARSZY CZŁONEK',
+      3: 'PORUCZNIK',
+      4: 'ZASTĘPCA',
+      5: 'SZEF'
     };
     return ranks[rankNumber as keyof typeof ranks] || 'CZŁONEK';
   };
@@ -141,11 +215,11 @@ const TabletOS = () => {
   return (
     <div className="w-full h-screen bg-black flex items-center justify-center overflow-hidden">
       <div className="relative">
-        {/* Tablet Frame - Thinner borders */}
+        {/* Tablet Frame */}
         <div className="w-[1024px] h-[768px] bg-gradient-to-br from-gray-800 to-gray-900 rounded-[1.5rem] p-0.5 shadow-2xl border border-gray-700">
           {/* Screen */}
           <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[1.35rem] overflow-hidden relative border border-gray-800">
-            {/* Status Bar - Reduced height */}
+            {/* Status Bar */}
             <div className="flex justify-between items-center px-6 py-1.5 text-white text-sm bg-black/20 backdrop-blur-sm border-b border-white/5 relative z-30">
               <div className="flex items-center gap-2">
                 <WifiHigh size={16} className="text-white/80" />
@@ -175,8 +249,8 @@ const TabletOS = () => {
               {renderCurrentApp()}
             </div>
 
-            {/* Organization Info Bar - Only on home screen */}
-            {currentApp === 'home' && (
+            {/* Organization Info Bar */}
+            {currentApp === 'home' && orgData.name && (
               <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
                 <div className="bg-black/60 backdrop-blur-sm rounded-xl px-6 py-2 border border-white/20">
                   <div className="flex items-center gap-4 text-white text-sm">

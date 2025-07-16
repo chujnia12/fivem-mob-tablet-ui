@@ -4,13 +4,17 @@ local isTabletOpen = false
 local orgData = nil
 local pendingInvitations = {}
 
--- Otwieranie tabletu - teraz tylko przez komendę lub wywołanie z systemu org
-RegisterNetEvent('org-tablet:client:openTablet', function()
-    if not isTabletOpen then
-        TriggerServerEvent('org-tablet:server:getOrgData')
-    end
+-- Komenda otwierania tabletu
+RegisterCommand('tablet', function()
+    TriggerServerEvent('org-tablet:server:getOrgData')
 end)
 
+-- Komenda dla admina do generowania danych testowych
+RegisterCommand('generatevehicles', function()
+    TriggerServerEvent('org-tablet:server:generateNewVehicles')
+end)
+
+-- Eventy podstawowe
 RegisterNetEvent('org-tablet:client:receiveOrgData', function(data)
     orgData = data
     isTabletOpen = true
@@ -21,7 +25,7 @@ RegisterNetEvent('org-tablet:client:receiveOrgData', function(data)
         orgData = orgData
     })
     
-    -- Animacja wyciągania tabletu
+    -- Animacja tabletu
     RequestAnimDict('amb@world_human_seat_wall_tablet@female@base')
     while not HasAnimDictLoaded('amb@world_human_seat_wall_tablet@female@base') do
         Wait(100)
@@ -38,10 +42,9 @@ end)
 RegisterNetEvent('org-tablet:client:receiveInvitation', function(invitation)
     table.insert(pendingInvitations, invitation)
     
-    -- Pokaż powiadomienie
-    ESX.ShowNotification('Otrzymałeś zaproszenie do organizacji: ' .. invitation.organization .. ' od ' .. invitation.inviter_name)
+    ESX.ShowNotification('Otrzymałeś zaproszenie do organizacji: ' .. invitation.organization)
     
-    -- Pokaż dialog wyboru
+    -- Dialog wyboru
     ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'org_invitation', {
         title = 'Zaproszenie do organizacji',
         align = 'top-left',
@@ -61,7 +64,6 @@ RegisterNetEvent('org-tablet:client:receiveInvitation', function(invitation)
         
         if data.current.value then
             menu.close()
-            -- Usuń zaproszenie z listy
             for i, inv in pairs(pendingInvitations) do
                 if inv.id == invitation.id then
                     table.remove(pendingInvitations, i)
@@ -87,7 +89,7 @@ RegisterNetEvent('org-tablet:client:showNotification', function(type, message)
     end
 end)
 
--- Odbieranie danych aplikacji
+-- Odbieranie danych z NUI
 RegisterNetEvent('org-tablet:client:receiveMembers', function(members)
     SendNUIMessage({
         action = 'updateMembers',
@@ -102,12 +104,49 @@ RegisterNetEvent('org-tablet:client:receiveTransactions', function(transactions)
     })
 end)
 
-RegisterNetEvent('org-tablet:client:transactionSuccess', function()
-    ESX.ShowNotification('Transakcja została wykonana pomyślnie')
-    TriggerServerEvent('org-tablet:server:getOrgData')
+RegisterNetEvent('org-tablet:client:receiveNotes', function(notes)
+    SendNUIMessage({
+        action = 'updateNotes',
+        notes = notes
+    })
 end)
 
--- Callback z NUI
+RegisterNetEvent('org-tablet:client:receiveJobs', function(jobs)
+    SendNUIMessage({
+        action = 'updateJobs',
+        jobs = jobs
+    })
+end)
+
+RegisterNetEvent('org-tablet:client:receiveTrackedVehicles', function(vehicles)
+    SendNUIMessage({
+        action = 'updateVehicles',
+        vehicles = vehicles
+    })
+end)
+
+RegisterNetEvent('org-tablet:client:receiveVehicleLocation', function(data)
+    SendNUIMessage({
+        action = 'showVehicleLocation',
+        locationData = data
+    })
+end)
+
+RegisterNetEvent('org-tablet:client:receiveAvailableApps', function(apps)
+    SendNUIMessage({
+        action = 'updateAvailableApps',
+        apps = apps
+    })
+end)
+
+RegisterNetEvent('org-tablet:client:appPurchased', function(appId)
+    SendNUIMessage({
+        action = 'appPurchased',
+        appId = appId
+    })
+end)
+
+-- NUI Callbacks
 RegisterNUICallback('closeTablet', function(data, cb)
     isTabletOpen = false
     SetNuiFocus(false, false)
@@ -115,22 +154,12 @@ RegisterNUICallback('closeTablet', function(data, cb)
     cb('ok')
 end)
 
+-- Zarządzanie członkami
 RegisterNUICallback('getMembers', function(data, cb)
     TriggerServerEvent('org-tablet:server:getMembers')
     cb('ok')
 end)
 
-RegisterNUICallback('getTransactions', function(data, cb)
-    TriggerServerEvent('org-tablet:server:getTransactions')
-    cb('ok')
-end)
-
-RegisterNUICallback('addTransaction', function(data, cb)
-    TriggerServerEvent('org-tablet:server:addTransaction', data.type, data.category, data.amount, data.description)
-    cb('ok')
-end)
-
--- Zarządzanie członkami
 RegisterNUICallback('invitePlayer', function(data, cb)
     TriggerServerEvent('org-tablet:server:invitePlayer', data.playerId)
     cb('ok')
@@ -146,7 +175,93 @@ RegisterNUICallback('fireMember', function(data, cb)
     cb('ok')
 end)
 
--- Escape key handler
+-- Finanse
+RegisterNUICallback('getTransactions', function(data, cb)
+    TriggerServerEvent('org-tablet:server:getTransactions')
+    cb('ok')
+end)
+
+RegisterNUICallback('addTransaction', function(data, cb)
+    TriggerServerEvent('org-tablet:server:addTransaction', data.type, data.category, data.amount, data.description)
+    cb('ok')
+end)
+
+-- Notatki
+RegisterNUICallback('getNotes', function(data, cb)
+    TriggerServerEvent('org-tablet:server:notes:getNotes')
+    cb('ok')
+end)
+
+RegisterNUICallback('saveNote', function(data, cb)
+    TriggerServerEvent('org-tablet:server:notes:saveNote', data)
+    cb('ok')
+end)
+
+RegisterNUICallback('deleteNote', function(data, cb)
+    TriggerServerEvent('org-tablet:server:notes:deleteNote', data.noteId)
+    cb('ok')
+end)
+
+-- Zlecenia
+RegisterNUICallback('getJobs', function(data, cb)
+    TriggerServerEvent('org-tablet:server:jobs:getJobs')
+    cb('ok')
+end)
+
+RegisterNUICallback('createJob', function(data, cb)
+    TriggerServerEvent('org-tablet:server:jobs:createJob', data)
+    cb('ok')
+end)
+
+RegisterNUICallback('acceptJob', function(data, cb)
+    TriggerServerEvent('org-tablet:server:jobs:acceptJob', data.jobId)
+    cb('ok')
+end)
+
+RegisterNUICallback('completeJob', function(data, cb)
+    TriggerServerEvent('org-tablet:server:jobs:completeJob', data.jobId)
+    cb('ok')
+end)
+
+-- Tracker
+RegisterNUICallback('getTrackedVehicles', function(data, cb)
+    TriggerServerEvent('org-tablet:server:getTrackedVehicles')
+    cb('ok')
+end)
+
+RegisterNUICallback('trackVehicle', function(data, cb)
+    TriggerServerEvent('org-tablet:server:trackVehicle', data.vehicleId, data.phoneNumber)
+    cb('ok')
+end)
+
+-- App Store
+RegisterNUICallback('getAvailableApps', function(data, cb)
+    TriggerServerEvent('org-tablet:server:getAvailableApps')
+    cb('ok')
+end)
+
+RegisterNUICallback('purchaseApp', function(data, cb)
+    TriggerServerEvent('org-tablet:server:purchaseApp', data.appId)
+    cb('ok')
+end)
+
+-- Ustawienia
+RegisterNUICallback('buyMemberSlot', function(data, cb)
+    TriggerServerEvent('org-tablet:server:settings:buyMemberSlot')
+    cb('ok')
+end)
+
+RegisterNUICallback('upgradeGarage', function(data, cb)
+    TriggerServerEvent('org-tablet:server:settings:upgradeGarage')
+    cb('ok')
+end)
+
+RegisterNUICallback('upgradeStash', function(data, cb)
+    TriggerServerEvent('org-tablet:server:settings:upgradeStash')
+    cb('ok')
+end)
+
+-- Obsługa ESC
 CreateThread(function()
     while true do
         Wait(0)
