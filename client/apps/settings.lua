@@ -25,6 +25,21 @@ RegisterNUICallback('settings:setIndividualPermissions', function(data, cb)
     cb('ok')
 end)
 
+-- Obsługa upgradów organizacji
+RegisterNUICallback('settings:purchaseUpgrade', function(data, cb)
+    local upgradeType = data.upgradeType
+    
+    if upgradeType == 'member_slot' then
+        TriggerServerEvent('org-tablet:server:settings:buyMemberSlot')
+    elseif upgradeType == 'garage_upgrade' then
+        TriggerServerEvent('org-tablet:server:settings:upgradeGarage')
+    elseif upgradeType == 'stash_upgrade' then
+        TriggerServerEvent('org-tablet:server:settings:upgradeStash')
+    end
+    
+    cb('ok')
+end)
+
 RegisterNetEvent('org-tablet:client:settings:receiveOrgSettings', function(settings)
     SendNUIMessage({
         action = 'updateOrgSettings',

@@ -29,8 +29,14 @@ Config.Grades = {
     [5] = {label = 'Szef', salary = 8000, permissions = {'stash_access', 'garage_access', 'view_tracker', 'manage_notes', 'missions_access', 'manage_jobs', 'manage_finances', 'manage_members', 'manage_crypto', 'purchase_apps'}}
 }
 
--- Kryptowaluty
+-- Kryptowaluty (5 głównych + COIN jako podstawowa)
 Config.Crypto = {
+    ['COIN'] = {
+        name = 'Organization Coin',
+        icon = '🪙',
+        price = 1.0, -- Podstawowa waluta organizacji
+        volatility = 0.0 -- Stabilna cena
+    },
     ['LCOIN'] = {
         name = 'Liberty Coin',
         icon = '🏛️',
@@ -65,17 +71,10 @@ Config.Crypto = {
         min_price = 50.0,
         max_price = 150.0,
         volatility = 0.10
-    },
-    ['LSCOIN'] = {
-        name = 'Los Santos Coin',
-        icon = '🌆',
-        min_price = 20.0,
-        max_price = 80.0,
-        volatility = 0.08
     }
 }
 
--- Aplikacje do kupienia
+-- Aplikacje do kupienia (ceny w COIN)
 Config.Apps = {
     ['zlecenia'] = {
         name = 'Zlecenia',
@@ -101,6 +100,13 @@ Config.Apps = {
         price = 75.0,
         icon = '🚗'
     }
+}
+
+-- Ceny rozbudowy organizacji (w COIN)
+Config.UpgradePrices = {
+    member_slot = 25.0,      -- +1 slot dla członka
+    garage_upgrade = 100.0,   -- +1 pojazd w garażu
+    stash_upgrade = 75.0      -- +100kg w szafce
 }
 
 -- Kategorie transakcji
@@ -157,13 +163,6 @@ Config.TrackerPrices = {
     ['Trudny'] = 50.0
 }
 
--- Ceny rozbudowy organizacji
-Config.UpgradePrices = {
-    member_slot = 25.0,
-    garage_upgrade = 100.0,
-    stash_upgrade = 75.0
-}
-
 -- Lokalizacja
 Config.Locale = {
     ['no_organization'] = 'Nie należysz do żadnej organizacji',
@@ -182,9 +181,9 @@ Config.Locale = {
     ['job_completed'] = 'Zlecenie zostało ukończone',
     ['vehicle_tracked'] = 'Pojazd został dodany do trackingu',
     ['app_purchased'] = 'Aplikacja została zakupiona',
-    ['slot_purchased'] = 'Slot dla członka został zakupiony',
-    ['garage_upgraded'] = 'Garaż został rozbudowany',
-    ['stash_upgraded'] = 'Szafka została rozbudowana'
+    ['slot_purchased'] = 'Slot dla członka został zakupiony za 25 COIN',
+    ['garage_upgraded'] = 'Garaż został rozbudowany za 100 COIN (+1 pojazd)',
+    ['stash_upgraded'] = 'Szafka została rozbudowana za 75 COIN (+100kg)'
 }
 
 -- Ustawienia NUI

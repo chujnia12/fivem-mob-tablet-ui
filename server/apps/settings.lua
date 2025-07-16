@@ -2,7 +2,7 @@
 -- Aplikacja ustawień - server
 ESX = exports['es_extended']:getSharedObject()
 
--- Kupowanie slotu dla członka
+-- Kupowanie slotu dla członka (25 COIN)
 RegisterNetEvent('org-tablet:server:settings:buyMemberSlot', function()
     local source = source
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -13,11 +13,11 @@ RegisterNetEvent('org-tablet:server:settings:buyMemberSlot', function()
         return
     end
     
-    local slotPrice = 25.0 -- Cena za slot w krypto
+    local slotPrice = 25.0 -- Cena za slot w COIN
     local orgData = GetOrganizationData(org)
     
     if orgData.crypto_balance < slotPrice then
-        TriggerClientEvent('org-tablet:client:showNotification', source, 'error', 'Niewystarczające środki krypto')
+        TriggerClientEvent('org-tablet:client:showNotification', source, 'error', 'Niewystarczające środki COIN')
         return
     end
     
@@ -28,14 +28,14 @@ RegisterNetEvent('org-tablet:server:settings:buyMemberSlot', function()
     
     -- Dodaj transakcję
     MySQL.insert('INSERT INTO org_transactions (organization, identifier, type, category, amount, description) VALUES (?, ?, ?, ?, ?, ?)', {
-        org, xPlayer.identifier, 'expense', 'Rozbudowa', slotPrice, 'Zakup slotu dla członka'
+        org, xPlayer.identifier, 'expense', 'Rozbudowa', slotPrice, 'Zakup slotu dla członka (+1 slot)'
     })
     
-    TriggerClientEvent('org-tablet:client:showNotification', source, 'success', 'Slot dla członka został zakupiony')
+    TriggerClientEvent('org-tablet:client:showNotification', source, 'success', 'Slot dla członka został zakupiony za 25 COIN')
     TriggerServerEvent('org-tablet:server:getOrgData')
 end)
 
--- Zwiększenie garażu
+-- Zwiększenie garażu (100 COIN)
 RegisterNetEvent('org-tablet:server:settings:upgradeGarage', function()
     local source = source
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -46,29 +46,29 @@ RegisterNetEvent('org-tablet:server:settings:upgradeGarage', function()
         return
     end
     
-    local upgradePrice = 100.0 -- Cena za rozbudowę garażu
+    local upgradePrice = 100.0 -- Cena za rozbudowę garażu w COIN
     local orgData = GetOrganizationData(org)
     
     if orgData.crypto_balance < upgradePrice then
-        TriggerClientEvent('org-tablet:client:showNotification', source, 'error', 'Niewystarczające środki krypto')
+        TriggerClientEvent('org-tablet:client:showNotification', source, 'error', 'Niewystarczające środki COIN')
         return
     end
     
     -- Zwiększ sloty w garażu
-    MySQL.update('UPDATE org_organizations SET garage_slots = garage_slots + 5, crypto_balance = crypto_balance - ? WHERE name = ?', {
+    MySQL.update('UPDATE org_organizations SET garage_slots = garage_slots + 1, crypto_balance = crypto_balance - ? WHERE name = ?', {
         upgradePrice, org
     })
     
     -- Dodaj transakcję
     MySQL.insert('INSERT INTO org_transactions (organization, identifier, type, category, amount, description) VALUES (?, ?, ?, ?, ?, ?)', {
-        org, xPlayer.identifier, 'expense', 'Rozbudowa', upgradePrice, 'Rozbudowa garażu (+5 slotów)'
+        org, xPlayer.identifier, 'expense', 'Rozbudowa', upgradePrice, 'Rozbudowa garażu (+1 pojazd)'
     })
     
-    TriggerClientEvent('org-tablet:client:showNotification', source, 'success', 'Garaż został rozbudowany (+5 slotów)')
+    TriggerClientEvent('org-tablet:client:showNotification', source, 'success', 'Garaż został rozbudowany za 100 COIN (+1 pojazd)')
     TriggerServerEvent('org-tablet:server:getOrgData')
 end)
 
--- Zwiększenie szafki
+-- Zwiększenie szafki (75 COIN)
 RegisterNetEvent('org-tablet:server:settings:upgradeStash', function()
     local source = source
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -79,25 +79,25 @@ RegisterNetEvent('org-tablet:server:settings:upgradeStash', function()
         return
     end
     
-    local upgradePrice = 75.0 -- Cena za rozbudowę szafki
+    local upgradePrice = 75.0 -- Cena za rozbudowę szafki w COIN
     local orgData = GetOrganizationData(org)
     
     if orgData.crypto_balance < upgradePrice then
-        TriggerClientEvent('org-tablet:client:showNotification', source, 'error', 'Niewystarczające środki krypto')
+        TriggerClientEvent('org-tablet:client:showNotification', source, 'error', 'Niewystarczające środki COIN')
         return
     end
     
     -- Zwiększ sloty w szafce
-    MySQL.update('UPDATE org_organizations SET stash_slots = stash_slots + 10, crypto_balance = crypto_balance - ? WHERE name = ?', {
+    MySQL.update('UPDATE org_organizations SET stash_slots = stash_slots + 100, crypto_balance = crypto_balance - ? WHERE name = ?', {
         upgradePrice, org
     })
     
     -- Dodaj transakcję
     MySQL.insert('INSERT INTO org_transactions (organization, identifier, type, category, amount, description) VALUES (?, ?, ?, ?, ?, ?)', {
-        org, xPlayer.identifier, 'expense', 'Rozbudowa', upgradePrice, 'Rozbudowa szafki (+10 slotów)'
+        org, xPlayer.identifier, 'expense', 'Rozbudowa', upgradePrice, 'Rozbudowa szafki (+100kg)'
     })
     
-    TriggerClientEvent('org-tablet:client:showNotification', source, 'success', 'Szafka została rozbudowana (+10 slotów)')
+    TriggerClientEvent('org-tablet:client:showNotification', source, 'success', 'Szafka została rozbudowana za 75 COIN (+100kg)')
     TriggerServerEvent('org-tablet:server:getOrgData')
 end)
 
