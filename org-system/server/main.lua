@@ -1,4 +1,3 @@
-
 ESX = exports['es_extended']:getSharedObject()
 
 -- Funkcje pomocnicze
@@ -57,64 +56,16 @@ function HasPermission(source, permission)
     return false
 end
 
--- System organizacji
+-- System organizacji - zaktualizowany dla dynamicznych pojemności
 RegisterNetEvent('org-system:server:openStash', function(orgName)
-    local source = source
-    local playerOrg = GetPlayerOrganization(source)
-    
-    if playerOrg ~= orgName then
-        TriggerClientEvent('esx:showNotification', source, 'Nie należysz do tej organizacji')
-        return
-    end
-    
-    if not HasPermission(source, 'stash_access') then
-        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień do schowka')
-        return
-    end
-    
-    local orgData = GetOrganizationData(orgName)
-    local stashSize = orgData.stash_slots or 50
-    
-    exports.ox_inventory:RegisterStash('org_stash_' .. orgName, 'Schowek ' .. orgName, stashSize, 100000)
-    TriggerClientEvent('ox_inventory:openInventory', source, 'stash', 'org_stash_' .. orgName)
+    -- Przekieruj do nowego systemu schowków
+    TriggerEvent('org-system:server:openStash', orgName)
 end)
 
--- Spawn pojazdu
+-- Spawn pojazdu - zaktualizowany
 RegisterNetEvent('org-system:server:spawnVehicle', function(model, orgName)
-    local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
-    local playerOrg = GetPlayerOrganization(source)
-    
-    if playerOrg ~= orgName then
-        TriggerClientEvent('esx:showNotification', source, 'Nie należysz do tej organizacji')
-        return
-    end
-    
-    if not HasPermission(source, 'garage_access') then
-        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień do garażu')
-        return
-    end
-    
-    -- Sprawdź limit pojazdów
-    local vehicleCount = MySQL.scalar.await('SELECT COUNT(*) FROM org_vehicles WHERE organization = ?', {orgName})
-    local orgData = GetOrganizationData(orgName)
-    
-    if vehicleCount >= (orgData.garage_slots or 10) then
-        TriggerClientEvent('esx:showNotification', source, 'Garaż jest pełny')
-        return
-    end
-    
-    -- Wygeneruj tablicę
-    local plate = 'ORG' .. string.upper(string.sub(orgName, 1, 3)) .. math.random(10, 99)
-    
-    -- Dodaj pojazd do bazy
-    MySQL.insert('INSERT INTO org_vehicles (organization, model, plate) VALUES (?, ?, ?)', {
-        orgName, model, plate
-    })
-    
-    -- Spawn pojazdu
-    local coords = Config.Organizations[orgName].garage
-    TriggerClientEvent('org-system:client:spawnVehicle', source, model, plate, coords)
+    -- Przekieruj do nowego systemu garażu
+    TriggerEvent('org-system:server:spawnVehicle', model, orgName)
 end)
 
 -- Wypłata wynagrodzeń
@@ -153,4 +104,53 @@ exports('GetPlayerOrgData', GetPlayerOrgData)
 exports('HasPermission', HasPermission)
 exports('GetOrganizationData', GetOrganizationData)
 
-print('^2[ORG-SYSTEM]^7 System organizacji został załadowany')
+-- Nowe eventy dla rozbudowy organizacji
+RegisterNetEvent('org-system:server:upgradeMemberSlots', function(orgName, amount)
+    local source = source
+    
+    if not HasPermission(source, 'manage_finances') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień')
+        return
+    end
+    
+    MySQL.update('UPDATE org_organizations SET member_slots = member_slots + ? WHERE name = ?', {
+        amount, orgName
+    })
+    
+    TriggerClientEvent('esx:showNotification', source, 'Zwiększono limit członków o ' .. amount)
+    print('^3[ORG-UPGRADE]^7 ' .. orgName .. ' zwiększył limit członków o ' .. amount)
+end)
+
+RegisterNetEvent('org-system:server:upgradeGarageSlots', function(orgName, amount)
+    local source = source
+    
+    if not HasPermission(source, 'manage_finances') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień')
+        return
+    end
+    
+    MySQL.update('UPDATE org_organizations SET garage_slots = garage_slots + ? WHERE name = ?', {
+        amount, orgName
+    })
+    
+    TriggerClientEvent('esx:showNotification', source, 'Zwiększono pojemność garażu o ' .. amount .. ' pojazdów')
+    print('^3[ORG-UPGRADE]^7 ' .. orgName .. ' zwiększył pojemność garażu o ' .. amount)
+end)
+
+RegisterNetEvent('org-system:server:upgradeStashSlots', function(orgName, amount)
+    local source = source
+    
+    if not HasPermission(source, 'manage_finances') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień')
+        return
+    end
+    
+    MySQL.update('UPDATE org_organizations SET stash_slots = stash_slots + ? WHERE name = ?', {
+        amount, orgName
+    })
+    
+    TriggerClientEvent('esx:showNotification', source, 'Zwiększono pojemność szafki o ' .. amount .. 'kg')
+    print('^3[ORG-UPGRADE]^7 ' .. orgName .. ' zwiększył pojemność szafki o ' .. amount .. 'kg')
+end)
+
+print('^2[ORG-SYSTEM]^7 System organizacji z dynamicznymi pojemnościami został załadowany')
