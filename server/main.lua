@@ -1,19 +1,4 @@
-
 ESX = exports['es_extended']:getSharedObject()
-
--- Rejestracja używalnego przedmiotu
-if Config.UseOxInventory then
-    exports('org_tablet', function(event, item, inventory, slot, data)
-        if event == 'usingItem' then
-            local source = inventory.id
-            TriggerClientEvent('org-tablet:client:openTablet', source)
-        end
-    end)
-else
-    ESX.RegisterUsableItem(Config.UsableItem, function(source)
-        TriggerClientEvent('org-tablet:client:openTablet', source)
-    end)
-end
 
 -- Funkcje pomocnicze
 function GetPlayerOrganization(source)
@@ -32,7 +17,7 @@ function GetPlayerOrgData(source)
     if not xPlayer then return nil end
     
     local result = MySQL.single.await([[
-        SELECT om.*, org.balance, org.crypto_balance, org.level, org.member_slots, org.label 
+        SELECT om.*, org.balance, org.crypto_balance, org.level, org.member_slots, org.garage_slots, org.stash_slots, org.label 
         FROM org_members om 
         JOIN org_organizations org ON om.organization = org.name 
         WHERE om.identifier = ?
@@ -50,10 +35,19 @@ function HasPermission(source, permission)
     if not orgData then return false end
     
     -- Boss ma wszystkie uprawnienia
-    if orgData.org_grade >= 4 then return true end
+    if orgData.org_grade >= 5 then return true end
     
-    local permissions = json.decode(orgData.permissions or '[]')
-    for _, perm in pairs(permissions) do
+    -- Sprawdź indywidualne uprawnienia
+    local individualPerms = json.decode(orgData.individual_permissions or '[]')
+    for _, perm in pairs(individualPerms) do
+        if perm == permission then
+            return true
+        end
+    end
+    
+    -- Sprawdź uprawnienia z rangi
+    local gradePerms = Config.Grades[orgData.org_grade].permissions or {}
+    for _, perm in pairs(gradePerms) do
         if perm == permission then
             return true
         end
@@ -62,37 +56,130 @@ function HasPermission(source, permission)
     return false
 end
 
-function GetPlayerNameByIdentifier(identifier)
-    local result = MySQL.scalar.await('SELECT CONCAT(firstname, " ", lastname) as name FROM users WHERE identifier = ?', {identifier})
-    return result or 'Unknown Player'
-end
+-- System organizacji
+RegisterNetEvent('org-system:server:openStash', function(orgName)
+    local source = source
+    local playerOrg = GetPlayerOrganization(source)
+    
+    if playerOrg ~= orgName then
+        TriggerClientEvent('esx:showNotification', source, 'Nie należysz do tej organizacji')
+        return
+    end
+    
+    if not HasPermission(source, 'stash_access') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień do schowka')
+        return
+    end
+    
+    local orgData = GetOrganizationData(orgName)
+    local stashSize = orgData.stash_slots or 50
+    
+    exports.ox_inventory:RegisterStash('org_stash_' .. orgName, 'Schowek ' .. orgName, stashSize, 100000)
+    TriggerClientEvent('ox_inventory:openInventory', source, 'stash', 'org_stash_' .. orgName)
+end)
 
--- Eventy sieciowe
+-- Spawn pojazdu
+RegisterNetEvent('org-system:server:spawnVehicle', function(model, orgName)
+    local source = source
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local playerOrg = GetPlayerOrganization(source)
+    
+    if playerOrg ~= orgName then
+        TriggerClientEvent('esx:showNotification', source, 'Nie należysz do tej organizacji')
+        return
+    end
+    
+    if not HasPermission(source, 'garage_access') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień do garażu')
+        return
+    end
+    
+    -- Sprawdź limit pojazdów
+    local vehicleCount = MySQL.scalar.await('SELECT COUNT(*) FROM org_vehicles WHERE organization = ?', {orgName})
+    local orgData = GetOrganizationData(orgName)
+    
+    if vehicleCount >= (orgData.garage_slots or 10) then
+        TriggerClientEvent('esx:showNotification', source, 'Garaż jest pełny')
+        return
+    end
+    
+    -- Wygeneruj tablicę
+    local plate = 'ORG' .. string.upper(string.sub(orgName, 1, 3)) .. math.random(10, 99)
+    
+    -- Dodaj pojazd do bazy
+    MySQL.insert('INSERT INTO org_vehicles (organization, model, plate) VALUES (?, ?, ?)', {
+        orgName, model, plate
+    })
+    
+    -- Spawn pojazdu
+    local coords = Config.Organizations[orgName].garage
+    TriggerClientEvent('org-system:client:spawnVehicle', source, model, plate, coords)
+end)
+
+-- Wypłata wynagrodzeń
+RegisterNetEvent('org-system:server:payroll', function(orgName)
+    local source = source
+    
+    if not HasPermission(source, 'manage_finances') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień')
+        return
+    end
+    
+    local members = MySQL.query.await('SELECT * FROM org_members WHERE organization = ?', {orgName})
+    local totalSalary = 0
+    
+    for _, member in pairs(members) do
+        local salary = Config.Grades[member.org_grade].salary or 0
+        totalSalary = totalSalary + salary
+        
+        -- Wypłać graczowi jeśli jest online
+        local xTarget = ESX.GetPlayerFromIdentifier(member.identifier)
+        if xTarget then
+            xTarget.addMoney(salary)
+            TriggerClientEvent('esx:showNotification', xTarget.source, 'Otrzymałeś wynagrodzenie: $' .. salary)
+        end
+    end
+    
+    -- Odejmij od salda organizacji
+    MySQL.update('UPDATE org_organizations SET balance = balance - ? WHERE name = ?', {totalSalary, orgName})
+    
+    TriggerClientEvent('esx:showNotification', source, 'Wypłacono wynagrodzenia: $' .. totalSalary)
+end)
+
+-- Export funkcji
+exports('GetPlayerOrganization', GetPlayerOrganization)
+exports('GetPlayerOrgData', GetPlayerOrgData)
+exports('HasPermission', HasPermission)
+exports('GetOrganizationData', GetOrganizationData)
+
+-- Otwieranie tabletu przez komendę
+RegisterNetEvent('org-tablet:client:openTablet', function()
+    local source = source
+    TriggerServerEvent('org-tablet:server:getOrgData')
+end)
+
+-- Pobieranie danych organizacji
 RegisterNetEvent('org-tablet:server:getOrgData', function()
     local source = source
     local orgData = GetPlayerOrgData(source)
     
     if orgData then
+        -- Pobierz numer telefonu z bazy danych phone
+        local phoneNumber = MySQL.scalar.await('SELECT phone_number FROM phone_phones WHERE citizenid = ?', {
+            ESX.GetPlayerFromId(source).identifier
+        }) or 'Brak'
+        
+        -- Aktualizuj numer w tabeli członków
+        MySQL.update('UPDATE org_members SET phone_number = ? WHERE identifier = ?', {
+            phoneNumber, ESX.GetPlayerFromId(source).identifier
+        })
+        
+        -- Dodaj numer do danych
+        orgData.phone_number = phoneNumber
+        
         TriggerClientEvent('org-tablet:client:receiveOrgData', source, orgData)
     else
         TriggerClientEvent('org-tablet:client:noOrganization', source)
-    end
-end)
-
-RegisterNetEvent('org-tablet:server:getMembers', function()
-    local source = source
-    local org = GetPlayerOrganization(source)
-    
-    if org then
-        local members = MySQL.query.await('SELECT * FROM org_members WHERE organization = ? ORDER BY org_grade DESC', {org})
-        
-        -- Dodaj nazwy graczy
-        for i, member in pairs(members) do
-            local playerName = GetPlayerNameByIdentifier(member.identifier)
-            members[i].player_name = playerName
-        end
-        
-        TriggerClientEvent('org-tablet:client:receiveMembers', source, members)
     end
 end)
 
@@ -125,13 +212,6 @@ RegisterNetEvent('org-tablet:server:invitePlayer', function(targetId)
         return
     end
     
-    -- Sprawdź czy zaproszenie już istnieje
-    local existingInvite = MySQL.scalar.await('SELECT id FROM org_invitations WHERE target_identifier = ? AND status = "pending"', {xTarget.identifier})
-    if existingInvite then
-        TriggerClientEvent('org-tablet:client:showNotification', source, 'error', 'Zaproszenie już zostało wysłane')
-        return
-    end
-    
     -- Sprawdź limit członków
     local orgData = GetOrganizationData(org)
     local memberCount = MySQL.scalar.await('SELECT COUNT(*) FROM org_members WHERE organization = ?', {org})
@@ -154,6 +234,7 @@ RegisterNetEvent('org-tablet:server:invitePlayer', function(targetId)
     })
 end)
 
+-- Odpowiedź na zaproszenie
 RegisterNetEvent('org-tablet:server:respondToInvitation', function(inviteId, response)
     local source = source
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -166,9 +247,14 @@ RegisterNetEvent('org-tablet:server:respondToInvitation', function(inviteId, res
     end
     
     if response == 'accept' then
+        -- Pobierz numer telefonu
+        local phoneNumber = MySQL.scalar.await('SELECT phone_number FROM phone_phones WHERE citizenid = ?', {
+            xPlayer.identifier
+        }) or 'Brak'
+        
         -- Dodaj gracza do organizacji
-        MySQL.insert('INSERT INTO org_members (organization, identifier, firstname, lastname, org_grade) VALUES (?, ?, ?, ?, ?)', {
-            invite.organization, xPlayer.identifier, xPlayer.get('firstName'), xPlayer.get('lastName'), 1
+        MySQL.insert('INSERT INTO org_members (organization, identifier, firstname, lastname, org_grade, phone_number) VALUES (?, ?, ?, ?, ?, ?)', {
+            invite.organization, xPlayer.identifier, xPlayer.get('firstName'), xPlayer.get('lastName'), 1, phoneNumber
         })
         
         -- Zaktualizuj status zaproszenia
@@ -186,12 +272,6 @@ RegisterNetEvent('org-tablet:server:respondToInvitation', function(inviteId, res
         MySQL.update('UPDATE org_invitations SET status = "declined" WHERE id = ?', {inviteId})
         
         TriggerClientEvent('org-tablet:client:showNotification', source, 'info', 'Odrzuciłeś zaproszenie do organizacji')
-        
-        -- Powiadom zapraszającego
-        local inviter = ESX.GetPlayerFromIdentifier(invite.invited_by)
-        if inviter then
-            TriggerClientEvent('org-tablet:client:showNotification', inviter.source, 'warning', xPlayer.getName() .. ' odrzucił zaproszenie')
-        end
     end
 end)
 
@@ -260,6 +340,42 @@ RegisterNetEvent('org-tablet:server:fireMember', function(memberId)
     if targetPlayer then
         TriggerClientEvent('org-tablet:client:showNotification', targetPlayer.source, 'warning', 'Zostałeś wyrzucony z organizacji')
     end
+end)
+
+-- Transakcje
+RegisterNetEvent('org-tablet:server:getTransactions', function()
+    local source = source
+    local org = GetPlayerOrganization(source)
+    
+    if org then
+        local transactions = MySQL.query.await('SELECT * FROM org_transactions WHERE organization = ? ORDER BY created_at DESC LIMIT 50', {org})
+        TriggerClientEvent('org-tablet:client:receiveTransactions', source, transactions)
+    end
+end)
+
+RegisterNetEvent('org-tablet:server:addTransaction', function(type, category, amount, description)
+    local source = source
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local org = GetPlayerOrganization(source)
+    
+    if not HasPermission(source, 'manage_finances') then
+        TriggerClientEvent('org-tablet:client:showNotification', source, 'error', 'Nie masz uprawnień')
+        return
+    end
+    
+    -- Aktualizuj saldo organizacji
+    if type == 'income' then
+        MySQL.update('UPDATE org_organizations SET balance = balance + ? WHERE name = ?', {amount, org})
+    elseif type == 'expense' then
+        MySQL.update('UPDATE org_organizations SET balance = balance - ? WHERE name = ?', {amount, org})
+    end
+    
+    -- Dodaj transakcję
+    MySQL.insert('INSERT INTO org_transactions (organization, identifier, type, category, amount, description) VALUES (?, ?, ?, ?, ?, ?)', {
+        org, xPlayer.identifier, type, category, amount, description
+    })
+    
+    TriggerClientEvent('org-tablet:client:transactionSuccess', source)
 end)
 
 -- Komendy do tworzenia organizacji (tylko dla adminów)

@@ -63,13 +63,12 @@ const AppsApp: React.FC<AppsAppProps> = ({
 
   const handlePurchase = (app: any) => {
     if (onPurchase(app.id, app.price)) {
-      // Symulacja pobierania
       setDownloadingApps(prev => [...prev, app.id]);
       
       setTimeout(() => {
         setDownloadingApps(prev => prev.filter(id => id !== app.id));
         onInstall(app.id);
-      }, 3000); // 3 sekundy pobierania
+      }, 3000);
     }
   };
 
@@ -138,7 +137,6 @@ const AppsApp: React.FC<AppsAppProps> = ({
 
   return (
     <div className="h-full bg-gradient-to-br from-gray-900 to-black text-white p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <Button 
@@ -156,7 +154,6 @@ const AppsApp: React.FC<AppsAppProps> = ({
         </div>
       </div>
 
-      {/* Apps Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {availableApps.map((app) => (
           <Card key={app.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-all duration-300">
@@ -206,7 +203,6 @@ const AppsApp: React.FC<AppsAppProps> = ({
         ))}
       </div>
 
-      {/* Installed Apps Section */}
       {installedApps.length > 0 && (
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">Zainstalowane aplikacje</h2>

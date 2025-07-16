@@ -3,9 +3,6 @@ ESX = exports['es_extended']:getSharedObject()
 
 -- Komenda otwierania tabletu
 RegisterCommand('zavmdt', function()
-    local playerData = ESX.GetPlayerData()
-    
-    -- Sprawdź czy gracz należy do organizacji
     ESX.TriggerServerCallback('org-system:checkMembership', function(isMember)
         if isMember then
             TriggerEvent('org-tablet:client:openTablet')
@@ -23,7 +20,6 @@ CreateThread(function()
         local playerCoords = GetEntityCoords(playerPed)
         
         for orgName, orgData in pairs(Config.Organizations) do
-            -- Sprawdź czy gracz jest w pobliżu punktów organizacji
             local distanceToSpawn = #(playerCoords - orgData.spawn.xyz)
             local distanceToGarage = #(playerCoords - orgData.garage)
             local distanceToStash = #(playerCoords - orgData.stash)
@@ -32,7 +28,6 @@ CreateThread(function()
             if distanceToSpawn < 5.0 or distanceToGarage < 5.0 or distanceToStash < 5.0 or distanceToBoss < 5.0 then
                 sleep = 5
                 
-                -- Sprawdź członkostwo
                 ESX.TriggerServerCallback('org-system:checkOrgMembership', function(isOrgMember)
                     if isOrgMember then
                         if distanceToSpawn < 2.0 then
@@ -53,7 +48,7 @@ CreateThread(function()
                         elseif distanceToStash < 2.0 then
                             ESX.ShowHelpNotification('Naciśnij ~INPUT_CONTEXT~ aby otworzyć schowek')
                             if IsControlJustReleased(0, 38) then
-                                TriggerEvent('org-system:client:openStash', orgName)
+                                TriggerServerEvent('org-system:server:openStash', orgName)
                             end
                         elseif distanceToBoss < 2.0 then
                             ESX.ShowHelpNotification('Naciśnij ~INPUT_CONTEXT~ aby otworzyć menu szefa')
@@ -90,7 +85,6 @@ RegisterNetEvent('org-system:client:openGarage', function(orgName)
             elements = elements
         }, function(data, menu)
             if data.current.value == 'spawn_new' then
-                -- Menu wyboru pojazdu
                 local vehicleElements = {}
                 for _, model in pairs(Config.OrgVehicles) do
                     table.insert(vehicleElements, {
@@ -104,14 +98,14 @@ RegisterNetEvent('org-system:client:openGarage', function(orgName)
                     align = 'top-left',
                     elements = vehicleElements
                 }, function(data2, menu2)
-                    TriggerServerEvent('org-system:spawnVehicle', data2.current.value, orgName)
+                    TriggerServerEvent('org-system:server:spawnVehicle', data2.current.value, orgName)
                     menu2.close()
                     menu.close()
                 end, function(data2, menu2)
                     menu2.close()
                 end)
             else
-                TriggerServerEvent('org-system:spawnStoredVehicle', data.current.value.id)
+                TriggerServerEvent('org-system:server:spawnStoredVehicle', data.current.value.id)
                 menu.close()
             end
         end, function(data, menu)
@@ -120,9 +114,23 @@ RegisterNetEvent('org-system:client:openGarage', function(orgName)
     end, orgName)
 end)
 
--- Obsługa schowków
-RegisterNetEvent('org-system:client:openStash', function(orgName)
-    TriggerServerEvent('org-system:openStash', orgName)
+-- Spawn pojazdu
+RegisterNetEvent('org-system:client:spawnVehicle', function(model, plate, coords)
+    local hash = GetHashKey(model)
+    
+    RequestModel(hash)
+    while not HasModelLoaded(hash) do
+        Wait(100)
+    end
+    
+    local vehicle = CreateVehicle(hash, coords.x, coords.y, coords.z, 0.0, true, false)
+    SetVehicleNumberPlateText(vehicle, plate)
+    SetVehicleEngineOn(vehicle, true, true, false)
+    SetVehicleOnGroundProperly(vehicle)
+    
+    TaskWarpPedIntoVehicle(PlayerPedId(), vehicle, -1)
+    
+    ESX.ShowNotification('Pojazd został wyparkowany')
 end)
 
 -- Menu szefa
@@ -134,8 +142,8 @@ RegisterNetEvent('org-system:client:openBossMenu', function(orgName)
         end
         
         local elements = {
-            {label = 'Zarządzaj organizacją', value = 'manage'},
             {label = 'Wypłać wynagrodzenia', value = 'payroll'},
+            {label = 'Statystyki organizacji', value = 'stats'},
             {label = 'Otwórz tablet', value = 'tablet'}
         }
         
@@ -144,12 +152,12 @@ RegisterNetEvent('org-system:client:openBossMenu', function(orgName)
             align = 'top-left',
             elements = elements
         }, function(data, menu)
-            if data.current.value == 'manage' then
-                -- Dodatkowe opcje zarządzania
-            elseif data.current.value == 'payroll' then
-                TriggerServerEvent('org-system:payroll', orgName)
+            if data.current.value == 'payroll' then
+                TriggerServerEvent('org-system:server:payroll', orgName)
             elseif data.current.value == 'tablet' then
                 TriggerEvent('org-tablet:client:openTablet')
+            elseif data.current.value == 'stats' then
+                -- Otwórz statystyki
             end
             menu.close()
         end, function(data, menu)

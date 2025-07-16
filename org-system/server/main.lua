@@ -1,7 +1,7 @@
 
 ESX = exports['es_extended']:getSharedObject()
 
--- Sprawdzanie członkostwa w organizacji
+-- Funkcje pomocnicze
 function GetPlayerOrganization(source)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then return nil end
@@ -13,13 +13,12 @@ function GetPlayerOrganization(source)
     return result
 end
 
--- Pobieranie danych organizacji gracza
 function GetPlayerOrgData(source)
     local xPlayer = ESX.GetPlayerFromId(source)
     if not xPlayer then return nil end
     
     local result = MySQL.single.await([[
-        SELECT om.*, org.balance, org.crypto_balance, org.level, org.member_slots, org.label 
+        SELECT om.*, org.balance, org.crypto_balance, org.level, org.member_slots, org.garage_slots, org.stash_slots, org.label 
         FROM org_members om 
         JOIN org_organizations org ON om.organization = org.name 
         WHERE om.identifier = ?
@@ -28,7 +27,10 @@ function GetPlayerOrgData(source)
     return result
 end
 
--- Sprawdzanie uprawnień
+function GetOrganizationData(orgName)
+    return MySQL.single.await('SELECT * FROM org_organizations WHERE name = ?', {orgName})
+end
+
 function HasPermission(source, permission)
     local orgData = GetPlayerOrgData(source)
     if not orgData then return false end
@@ -36,6 +38,15 @@ function HasPermission(source, permission)
     -- Boss ma wszystkie uprawnienia
     if orgData.org_grade >= 5 then return true end
     
+    -- Sprawdź indywidualne uprawnienia
+    local individualPerms = json.decode(orgData.individual_permissions or '[]')
+    for _, perm in pairs(individualPerms) do
+        if perm == permission then
+            return true
+        end
+    end
+    
+    -- Sprawdź uprawnienia z rangi
     local gradePerms = Config.Grades[orgData.org_grade].permissions or {}
     for _, perm in pairs(gradePerms) do
         if perm == permission then
@@ -46,100 +57,100 @@ function HasPermission(source, permission)
     return false
 end
 
--- Tworzenie organizacji (admin)
-ESX.RegisterCommand('createorg', 'admin', function(xPlayer, args, showError)
-    local orgName = args.name
-    local orgLabel = args.label or orgName
-    local balance = args.balance or 50000
-    local memberSlots = args.slots or 25
+-- System organizacji
+RegisterNetEvent('org-system:server:openStash', function(orgName)
+    local source = source
+    local playerOrg = GetPlayerOrganization(source)
     
-    if orgName then
-        MySQL.insert('INSERT INTO org_organizations (name, label, balance, member_slots) VALUES (?, ?, ?, ?)', {
-            orgName, orgLabel, balance, memberSlots
-        }, function(insertId)
-            if insertId then
-                xPlayer.showNotification('Organizacja ' .. orgLabel .. ' została utworzona')
-                
-                -- Dodaj podstawowe kryptowaluty
-                for symbol, _ in pairs(Config.Crypto) do
-                    MySQL.insert('INSERT INTO org_crypto_portfolio (organization, crypto_symbol, amount_owned, wallet_address) VALUES (?, ?, ?, ?)', {
-                        orgName, symbol, 0.0, GenerateWalletAddress()
-                    })
-                end
-            else
-                xPlayer.showNotification('Błąd podczas tworzenia organizacji')
-            end
-        end)
+    if playerOrg ~= orgName then
+        TriggerClientEvent('esx:showNotification', source, 'Nie należysz do tej organizacji')
+        return
     end
-end, false, {help = 'Utwórz organizację', validate = true, arguments = {
-    {name = 'name', help = 'Nazwa organizacji', type = 'string'},
-    {name = 'label', help = 'Etykieta organizacji', type = 'string'},
-    {name = 'balance', help = 'Saldo początkowe', type = 'number'},
-    {name = 'slots', help = 'Limit członków', type = 'number'}
-}})
+    
+    if not HasPermission(source, 'stash_access') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień do schowka')
+        return
+    end
+    
+    local orgData = GetOrganizationData(orgName)
+    local stashSize = orgData.stash_slots or 50
+    
+    exports.ox_inventory:RegisterStash('org_stash_' .. orgName, 'Schowek ' .. orgName, stashSize, 100000)
+    TriggerClientEvent('ox_inventory:openInventory', source, 'stash', 'org_stash_' .. orgName)
+end)
 
--- Dodawanie gracza do organizacji
-ESX.RegisterCommand('addtoorg', 'admin', function(xPlayer, args, showError)
-    local targetId = args.id
-    local orgName = args.organization
-    local grade = args.grade or 1
+-- Spawn pojazdu
+RegisterNetEvent('org-system:server:spawnVehicle', function(model, orgName)
+    local source = source
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local playerOrg = GetPlayerOrganization(source)
     
-    local xTarget = ESX.GetPlayerFromId(targetId)
-    if xTarget then
-        -- Pobierz numer telefonu z bazy danych
-        local phoneNumber = MySQL.scalar.await('SELECT phone_number FROM phone_phones WHERE citizenid = ?', {
-            xTarget.identifier
-        }) or 'Brak'
-        
-        MySQL.insert('INSERT INTO org_members (organization, identifier, firstname, lastname, org_grade, phone_number) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE org_grade = VALUES(org_grade)', {
-            orgName, xTarget.identifier, xTarget.get('firstName'), xTarget.get('lastName'), grade, phoneNumber
-        }, function(insertId)
-            if insertId then
-                xPlayer.showNotification('Gracz został dodany do organizacji')
-                xTarget.showNotification('Zostałeś dodany do organizacji: ' .. orgName)
-                
-                -- Aktualizuj statystyki organizacji
-                UpdateOrgStats(orgName, 'members_added', 1)
-            end
-        end)
-    end
-end, false, {help = 'Dodaj gracza do organizacji', validate = true, arguments = {
-    {name = 'id', help = 'ID gracza', type = 'number'},
-    {name = 'organization', help = 'Nazwa organizacji', type = 'string'},
-    {name = 'grade', help = 'Stopień (opcjonalne)', type = 'number'}
-}})
-
--- Funkcja aktualizacji statystyk
-function UpdateOrgStats(orgName, statType, value)
-    local stats = MySQL.single.await('SELECT stats FROM org_organizations WHERE name = ?', {orgName})
-    
-    local currentStats = {}
-    if stats and stats.stats then
-        currentStats = json.decode(stats.stats)
+    if playerOrg ~= orgName then
+        TriggerClientEvent('esx:showNotification', source, 'Nie należysz do tej organizacji')
+        return
     end
     
-    currentStats[statType] = (currentStats[statType] or 0) + value
+    if not HasPermission(source, 'garage_access') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień do garażu')
+        return
+    end
     
-    MySQL.update('UPDATE org_organizations SET stats = ? WHERE name = ?', {
-        json.encode(currentStats), orgName
+    -- Sprawdź limit pojazdów
+    local vehicleCount = MySQL.scalar.await('SELECT COUNT(*) FROM org_vehicles WHERE organization = ?', {orgName})
+    local orgData = GetOrganizationData(orgName)
+    
+    if vehicleCount >= (orgData.garage_slots or 10) then
+        TriggerClientEvent('esx:showNotification', source, 'Garaż jest pełny')
+        return
+    end
+    
+    -- Wygeneruj tablicę
+    local plate = 'ORG' .. string.upper(string.sub(orgName, 1, 3)) .. math.random(10, 99)
+    
+    -- Dodaj pojazd do bazy
+    MySQL.insert('INSERT INTO org_vehicles (organization, model, plate) VALUES (?, ?, ?)', {
+        orgName, model, plate
     })
-end
+    
+    -- Spawn pojazdu
+    local coords = Config.Organizations[orgName].garage
+    TriggerClientEvent('org-system:client:spawnVehicle', source, model, plate, coords)
+end)
 
--- Generowanie adresu portfela
-function GenerateWalletAddress()
-    local chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    local address = ''
-    for i = 1, 34 do
-        local rand = math.random(#chars)
-        address = address .. chars:sub(rand, rand)
+-- Wypłata wynagrodzeń
+RegisterNetEvent('org-system:server:payroll', function(orgName)
+    local source = source
+    
+    if not HasPermission(source, 'manage_finances') then
+        TriggerClientEvent('esx:showNotification', source, 'Brak uprawnień')
+        return
     end
-    return address
-end
+    
+    local members = MySQL.query.await('SELECT * FROM org_members WHERE organization = ?', {orgName})
+    local totalSalary = 0
+    
+    for _, member in pairs(members) do
+        local salary = Config.Grades[member.org_grade].salary or 0
+        totalSalary = totalSalary + salary
+        
+        -- Wypłać graczowi jeśli jest online
+        local xTarget = ESX.GetPlayerFromIdentifier(member.identifier)
+        if xTarget then
+            xTarget.addMoney(salary)
+            TriggerClientEvent('esx:showNotification', xTarget.source, 'Otrzymałeś wynagrodzenie: $' .. salary)
+        end
+    end
+    
+    -- Odejmij od salda organizacji
+    MySQL.update('UPDATE org_organizations SET balance = balance - ? WHERE name = ?', {totalSalary, orgName})
+    
+    TriggerClientEvent('esx:showNotification', source, 'Wypłacono wynagrodzenia: $' .. totalSalary)
+end)
 
 -- Export funkcji
 exports('GetPlayerOrganization', GetPlayerOrganization)
 exports('GetPlayerOrgData', GetPlayerOrgData)
 exports('HasPermission', HasPermission)
-exports('UpdateOrgStats', UpdateOrgStats)
+exports('GetOrganizationData', GetOrganizationData)
 
 print('^2[ORG-SYSTEM]^7 System organizacji został załadowany')
