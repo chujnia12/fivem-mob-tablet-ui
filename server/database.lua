@@ -1,4 +1,3 @@
-
 -- Tworzenie tabel organizacji
 CreateThread(function()
     -- Tabela organizacji
@@ -149,6 +148,28 @@ CreateThread(function()
             `deadline` datetime DEFAULT NULL,
             `created_by` varchar(50) NOT NULL,
             `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ]])
+
+    -- Dodaj kolumnę statystyk do organizacji
+    MySQL.query('ALTER TABLE `org_organizations` ADD COLUMN `stats` longtext DEFAULT NULL')
+    
+    -- Dodaj kolumnę numeru telefonu do członków
+    MySQL.query('ALTER TABLE `org_members` ADD COLUMN `phone_number` varchar(20) DEFAULT NULL')
+    
+    -- Tabela pojazdów organizacji
+    MySQL.query([[
+        CREATE TABLE IF NOT EXISTS `org_vehicles` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `organization` varchar(50) NOT NULL,
+            `model` varchar(50) NOT NULL,
+            `plate` varchar(20) NOT NULL,
+            `stored` tinyint(1) DEFAULT 1,
+            `garage` varchar(50) DEFAULT 'main',
+            `fuel` int(11) DEFAULT 100,
+            `engine` float DEFAULT 1000.0,
+            `body` float DEFAULT 1000.0,
             PRIMARY KEY (`id`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ]])

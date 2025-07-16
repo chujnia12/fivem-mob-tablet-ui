@@ -1,262 +1,236 @@
+
 import React, { useState } from 'react';
-import { 
-  ArrowLeft, 
-  Download, 
-  Briefcase, 
-  Bitcoin, 
-  Crosshair, 
-  ShoppingCart,
-  CheckCircle,
-  Loader,
-  AlertCircle,
-  Star,
-  Users,
-  Wifi,
-  Play,
-  MapPin
-} from 'lucide-react';
-import { AppType } from '../../../pages/TabletOS';
+import { ArrowLeft, Download, Check, Loader2 } from 'lucide-react';
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
+import { Badge } from '../../ui/badge';
 
 interface AppsAppProps {
-  orgData: {
-    name: string;
-    rank: number;
-    id: number;
-    balance: number;
-    crypto_balance: number;
-  };
+  orgData: any;
   onHome: () => void;
-  onPurchase: (app: AppType, price: number) => boolean;
-  onInstall: (app: AppType) => void;
-  onOpenApp: (app: AppType) => void;
-  installedApps: AppType[];
-  purchasedApps: AppType[];
+  onPurchase: (app: string, price: number) => boolean;
+  onInstall: (app: string) => void;
+  onOpenApp: (app: string) => void;
+  installedApps: string[];
+  purchasedApps: string[];
 }
 
-const AppsApp: React.FC<AppsAppProps> = ({ 
-  orgData, 
-  onHome, 
-  onPurchase, 
-  onInstall, 
+const AppsApp: React.FC<AppsAppProps> = ({
+  orgData,
+  onHome,
+  onPurchase,
+  onInstall,
   onOpenApp,
-  installedApps, 
-  purchasedApps 
+  installedApps,
+  purchasedApps
 }) => {
   const [downloadingApps, setDownloadingApps] = useState<string[]>([]);
-  const [downloadProgress, setDownloadProgress] = useState<{[key: string]: number}>({});
 
   const availableApps = [
     {
-      id: 'zlecenia' as AppType,
+      id: 'zlecenia',
       name: 'Zlecenia',
-      description: 'Zarządzaj zleceniami organizacji',
-      icon: Briefcase,
-      price: 2.5,
-      category: 'Biznes',
-      rating: 4.8,
-      size: '12.5 MB',
-      screenshots: 3
+      description: 'System zarządzania zleceniami organizacji',
+      price: 50,
+      icon: '📋',
+      category: 'Biznes'
     },
     {
-      id: 'kryptowaluty' as AppType,
+      id: 'kryptowaluty',
       name: 'Kryptowaluty',
-      description: 'Handel kryptowalutami',
-      icon: Bitcoin,
-      price: 3.2,
-      category: 'Finanse',
-      rating: 4.6,
-      size: '8.2 MB',
-      screenshots: 4
+      description: 'Handel i zarządzanie kryptowalutami',
+      price: 100,
+      icon: '💰',
+      category: 'Finanse'
     },
     {
-      id: 'napady' as AppType,
+      id: 'napady',
       name: 'Napady',
-      description: 'Planowanie i wykonywanie napadów',
-      icon: Crosshair,
-      price: 4.8,
-      category: 'Akcja',
-      rating: 4.9,
-      size: '15.7 MB',
-      screenshots: 5
+      description: 'Planowanie i organizacja napadów',
+      price: 200,
+      icon: '🎭',
+      category: 'Operacje'
     },
     {
-      id: 'tracker' as AppType,
+      id: 'tracker',
       name: 'Tracker',
-      description: 'Śledź lokalizacje pojazdów do kradzieży',
-      icon: MapPin,
-      price: 6.5,
-      category: 'Narzędzia',
-      rating: 4.7,
-      size: '11.3 MB',
-      screenshots: 4
-    },
+      description: 'Śledzenie pojazdów w mieście',
+      price: 75,
+      icon: '🚗',
+      category: 'Narzędzia'
+    }
   ];
 
-  const handlePurchase = (app: AppType, price: number) => {
-    const success = onPurchase(app, price);
-    if (!success) {
-      alert('Niewystarczające środki!');
+  const handlePurchase = (app: any) => {
+    if (onPurchase(app.id, app.price)) {
+      // Symulacja pobierania
+      setDownloadingApps(prev => [...prev, app.id]);
+      
+      setTimeout(() => {
+        setDownloadingApps(prev => prev.filter(id => id !== app.id));
+        onInstall(app.id);
+      }, 3000); // 3 sekundy pobierania
     }
   };
 
-  const handleDownload = async (app: AppType) => {
-    setDownloadingApps(prev => [...prev, app]);
-    setDownloadProgress(prev => ({ ...prev, [app]: 0 }));
-    
-    // Simulate download progress with animation
-    for (let i = 0; i <= 100; i += 5) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-      setDownloadProgress(prev => ({ ...prev, [app]: i }));
+  const getAppStatus = (app: any) => {
+    if (downloadingApps.includes(app.id)) {
+      return 'downloading';
     }
-    
-    onInstall(app);
-    setDownloadingApps(prev => prev.filter(a => a !== app));
-    setDownloadProgress(prev => {
-      const newProgress = { ...prev };
-      delete newProgress[app];
-      return newProgress;
-    });
-  };
-
-  const getAppStatus = (appId: AppType) => {
-    if (installedApps.includes(appId)) return 'installed';
-    if (purchasedApps.includes(appId)) return 'purchased';
-    if (downloadingApps.includes(appId)) return 'downloading';
+    if (installedApps.includes(app.id)) {
+      return 'installed';
+    }
+    if (purchasedApps.includes(app.id)) {
+      return 'purchased';
+    }
     return 'available';
   };
 
-  const renderActionButton = (app: typeof availableApps[0]) => {
-    const status = getAppStatus(app.id);
-    const progress = downloadProgress[app.id] || 0;
+  const renderAppButton = (app: any) => {
+    const status = getAppStatus(app);
     
     switch (status) {
-      case 'installed':
-        return (
-          <button
-            onClick={() => onOpenApp(app.id)}
-            className="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition-colors border border-blue-500/30 text-blue-400 text-sm font-medium backdrop-blur-sm"
-          >
-            Otwórz
-          </button>
-        );
-      
-      case 'purchased':
-        return (
-          <button
-            onClick={() => handleDownload(app.id)}
-            className="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 rounded-lg transition-colors border border-green-500/30 text-green-400 text-sm font-medium backdrop-blur-sm"
-          >
-            Pobierz
-          </button>
-        );
-      
       case 'downloading':
         return (
-          <div className="flex flex-col items-center justify-center">
-            <div className="flex items-center justify-center px-4 py-2 bg-white/5 rounded-lg border border-white/20 mb-2">
-              <Loader size={16} className="animate-spin text-blue-400 mr-2" />
-              <span className="text-sm font-medium text-white/90">{progress}%</span>
-            </div>
-            <div className="w-24 h-1 bg-white/10 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
+          <Button disabled className="w-full">
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Pobieranie...
+          </Button>
         );
-      
+      case 'installed':
+        return (
+          <Button 
+            onClick={() => onOpenApp(app.id)} 
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            <Check className="h-4 w-4 mr-2" />
+            Otwórz
+          </Button>
+        );
+      case 'purchased':
+        return (
+          <Button 
+            onClick={() => {
+              setDownloadingApps(prev => [...prev, app.id]);
+              setTimeout(() => {
+                setDownloadingApps(prev => prev.filter(id => id !== app.id));
+                onInstall(app.id);
+              }, 2000);
+            }}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Zainstaluj
+          </Button>
+        );
       default:
         return (
-          <button
-            onClick={() => handlePurchase(app.id, app.price)}
+          <Button 
+            onClick={() => handlePurchase(app)}
             disabled={orgData.crypto_balance < app.price}
-            className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium backdrop-blur-sm border ${
-              orgData.crypto_balance >= app.price
-                ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 border-orange-500/30'
-                : 'bg-white/5 text-white/40 cursor-not-allowed border-white/10'
-            }`}
+            className="w-full"
           >
-            {orgData.crypto_balance >= app.price ? `${app.price} COIN` : 'Brak środków'}
-          </button>
+            Kup za ${app.price}
+          </Button>
         );
     }
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className="h-full bg-gradient-to-br from-gray-900 to-black text-white p-6">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-black/90 backdrop-blur-sm border-b border-white/10 px-6 py-3">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <button
+          <Button 
+            variant="ghost" 
+            size="icon"
             onClick={onHome}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            className="text-white hover:bg-white/10"
           >
-            <ArrowLeft size={20} className="text-blue-400" />
-          </button>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-white">App Store</h1>
-            <p className="text-xs text-white/60">Odkryj i pobierz aplikacje</p>
-          </div>
-          <div className="bg-white/5 rounded-xl px-4 py-2 border border-white/10 backdrop-blur-sm">
-            <div className="text-center">
-              <p className="text-xs text-white/60">Saldo</p>
-              <p className="text-sm font-bold text-orange-400">{orgData.crypto_balance.toFixed(2)} COIN</p>
-            </div>
-          </div>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">App Store</h1>
+        </div>
+        <div className="text-sm text-gray-400">
+          Saldo Krypto: ${orgData.crypto_balance?.toFixed(2) || '0.00'}
         </div>
       </div>
 
       {/* Apps Grid */}
-      <div className="flex-1 px-6 py-6 overflow-y-auto custom-scrollbar">
-        <div className="grid grid-cols-2 gap-4">
-          {availableApps.map((app) => (
-            <div
-              key={app.id}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-200 hover:border-white/20"
-            >
-              {/* App Icon and Basic Info */}
-              <div className="flex items-start gap-3 mb-3">
-                <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
-                  <app.icon size={24} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-white mb-1 truncate">{app.name}</h3>
-                  <p className="text-xs text-white/60 mb-1">{app.category}</p>
-                  <div className="flex items-center gap-2 text-xs text-white/50">
-                    <div className="flex items-center">
-                      <Star size={10} className="text-yellow-400 fill-current mr-1" />
-                      <span>{app.rating}</span>
-                    </div>
-                    <span>•</span>
-                    <span>{app.size}</span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {availableApps.map((app) => (
+          <Card key={app.id} className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-all duration-300">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{app.icon}</div>
+                  <div>
+                    <CardTitle className="text-lg text-white">{app.name}</CardTitle>
+                    <Badge variant="secondary" className="text-xs mt-1">
+                      {app.category}
+                    </Badge>
                   </div>
                 </div>
+                {installedApps.includes(app.id) && (
+                  <Badge className="bg-green-600">
+                    <Check className="h-3 w-3 mr-1" />
+                    Zainstalowana
+                  </Badge>
+                )}
+                {downloadingApps.includes(app.id) && (
+                  <Badge className="bg-blue-600">
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Pobieranie
+                  </Badge>
+                )}
               </div>
-
-              {/* Description */}
-              <p className="text-xs text-white/70 mb-4 line-clamp-2">{app.description}</p>
-
-              {/* Screenshots Indicator */}
-              <div className="flex gap-1 mb-4">
-                {Array.from({ length: app.screenshots }).map((_, i) => (
-                  <div key={i} className="w-8 h-6 bg-white/10 rounded border border-white/20"></div>
-                ))}
-              </div>
-
-              {/* Price and Action */}
-              <div className="flex items-center justify-between">
-                <div className="text-right">
-                  <p className="text-sm font-bold text-orange-400">
-                    {getAppStatus(app.id) === 'available' ? `${app.price} COIN` : 'Zakupiono'}
-                  </p>
+            </CardHeader>
+            
+            <CardContent className="space-y-4">
+              <CardDescription className="text-gray-300">
+                {app.description}
+              </CardDescription>
+              
+              {downloadingApps.includes(app.id) && (
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-100 animate-pulse"
+                    style={{ width: '60%' }}
+                  ></div>
                 </div>
-                {renderActionButton(app)}
-              </div>
-            </div>
-          ))}
-        </div>
+              )}
+              
+              {renderAppButton(app)}
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      {/* Installed Apps Section */}
+      {installedApps.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Zainstalowane aplikacje</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {installedApps.map((appId) => {
+              const app = availableApps.find(a => a.id === appId);
+              if (!app) return null;
+              
+              return (
+                <Card 
+                  key={appId}
+                  className="bg-gray-800/30 border-gray-700 cursor-pointer hover:bg-gray-800/50 transition-all duration-200"
+                  onClick={() => onOpenApp(appId)}
+                >
+                  <CardContent className="p-4 text-center">
+                    <div className="text-2xl mb-2">{app.icon}</div>
+                    <div className="text-sm font-medium text-white">{app.name}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

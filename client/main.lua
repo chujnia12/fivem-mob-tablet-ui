@@ -4,7 +4,7 @@ local isTabletOpen = false
 local orgData = nil
 local pendingInvitations = {}
 
--- Otwieranie tabletu
+-- Otwieranie tabletu - teraz tylko przez komendę lub wywołanie z systemu org
 RegisterNetEvent('org-tablet:client:openTablet', function()
     if not isTabletOpen then
         TriggerServerEvent('org-tablet:server:getOrgData')
@@ -31,7 +31,7 @@ RegisterNetEvent('org-tablet:client:receiveOrgData', function(data)
 end)
 
 RegisterNetEvent('org-tablet:client:noOrganization', function()
-    ESX.ShowNotification(Config.Locale['no_organization'])
+    ESX.ShowNotification('Nie należysz do żadnej organizacji', 'error')
 end)
 
 -- System zaproszeń
@@ -103,7 +103,7 @@ RegisterNetEvent('org-tablet:client:receiveTransactions', function(transactions)
 end)
 
 RegisterNetEvent('org-tablet:client:transactionSuccess', function()
-    ESX.ShowNotification(Config.Locale['transaction_success'])
+    ESX.ShowNotification('Transakcja została wykonana pomyślnie')
     TriggerServerEvent('org-tablet:server:getOrgData')
 end)
 
@@ -164,16 +164,4 @@ CreateThread(function()
     end
 end)
 
--- Komenda do sprawdzania zaproszeń
-RegisterCommand('invitations', function()
-    if #pendingInvitations > 0 then
-        ESX.ShowNotification('Masz ' .. #pendingInvitations .. ' oczekujących zaproszeń do organizacji')
-        for _, invitation in pairs(pendingInvitations) do
-            ESX.ShowNotification('Organizacja: ' .. invitation.organization .. ' od ' .. invitation.inviter_name)
-        end
-    else
-        ESX.ShowNotification('Nie masz oczekujących zaproszeń')
-    end
-end)
-
-print('^2[ORG-TABLET]^7 Skrypt główny klienta został załadowany')
+print('^2[ORG-TABLET]^7 Klient tabletu został załadowany')
