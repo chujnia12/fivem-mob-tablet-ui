@@ -2,6 +2,7 @@
 ESX = exports['es_extended']:getSharedObject()
 local isTabletOpen = false
 local orgData = nil
+local pendingInvitations = {}
 
 -- Otwieranie tabletu
 RegisterNetEvent('org-tablet:client:openTablet', function()
@@ -31,6 +32,59 @@ end)
 
 RegisterNetEvent('org-tablet:client:noOrganization', function()
     ESX.ShowNotification(Config.Locale['no_organization'])
+end)
+
+-- System zaproszeń
+RegisterNetEvent('org-tablet:client:receiveInvitation', function(invitation)
+    table.insert(pendingInvitations, invitation)
+    
+    -- Pokaż powiadomienie
+    ESX.ShowNotification('Otrzymałeś zaproszenie do organizacji: ' .. invitation.organization .. ' od ' .. invitation.inviter_name)
+    
+    -- Pokaż dialog wyboru
+    ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'org_invitation', {
+        title = 'Zaproszenie do organizacji',
+        align = 'top-left',
+        elements = {
+            {label = 'Organizacja: ' .. invitation.organization, value = nil},
+            {label = 'Zapraszający: ' .. invitation.inviter_name, value = nil},
+            {label = '---', value = nil},
+            {label = 'Przyjmij zaproszenie', value = 'accept'},
+            {label = 'Odrzuć zaproszenie', value = 'decline'}
+        }
+    }, function(data, menu)
+        if data.current.value == 'accept' then
+            TriggerServerEvent('org-tablet:server:respondToInvitation', invitation.id, 'accept')
+        elseif data.current.value == 'decline' then
+            TriggerServerEvent('org-tablet:server:respondToInvitation', invitation.id, 'decline')
+        end
+        
+        if data.current.value then
+            menu.close()
+            -- Usuń zaproszenie z listy
+            for i, inv in pairs(pendingInvitations) do
+                if inv.id == invitation.id then
+                    table.remove(pendingInvitations, i)
+                    break
+                end
+            end
+        end
+    end, function(data, menu)
+        menu.close()
+    end)
+end)
+
+-- Powiadomienia
+RegisterNetEvent('org-tablet:client:showNotification', function(type, message)
+    if type == 'success' then
+        ESX.ShowNotification(message, 'success')
+    elseif type == 'error' then
+        ESX.ShowNotification(message, 'error')
+    elseif type == 'warning' then
+        ESX.ShowNotification(message, 'warning')
+    else
+        ESX.ShowNotification(message)
+    end
 end)
 
 -- Odbieranie danych aplikacji
@@ -76,6 +130,22 @@ RegisterNUICallback('addTransaction', function(data, cb)
     cb('ok')
 end)
 
+-- Zarządzanie członkami
+RegisterNUICallback('invitePlayer', function(data, cb)
+    TriggerServerEvent('org-tablet:server:invitePlayer', data.playerId)
+    cb('ok')
+end)
+
+RegisterNUICallback('promoteMember', function(data, cb)
+    TriggerServerEvent('org-tablet:server:promoteMember', data.memberId, data.newGrade)
+    cb('ok')
+end)
+
+RegisterNUICallback('fireMember', function(data, cb)
+    TriggerServerEvent('org-tablet:server:fireMember', data.memberId)
+    cb('ok')
+end)
+
 -- Escape key handler
 CreateThread(function()
     while true do
@@ -91,6 +161,18 @@ CreateThread(function()
         else
             Wait(500)
         end
+    end
+end)
+
+-- Komenda do sprawdzania zaproszeń
+RegisterCommand('invitations', function()
+    if #pendingInvitations > 0 then
+        ESX.ShowNotification('Masz ' .. #pendingInvitations .. ' oczekujących zaproszeń do organizacji')
+        for _, invitation in pairs(pendingInvitations) do
+            ESX.ShowNotification('Organizacja: ' .. invitation.organization .. ' od ' .. invitation.inviter_name)
+        end
+    else
+        ESX.ShowNotification('Nie masz oczekujących zaproszeń')
     end
 end)
 

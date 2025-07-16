@@ -1,31 +1,39 @@
 
--- Aplikacja finansów - client
-RegisterNUICallback('finance:deposit', function(data, cb)
-    TriggerServerEvent('org-tablet:server:finance:deposit', data.amount)
-    cb('ok')
-end)
+-- Finanse - klient
+local financeStats = {}
+local organizations = {}
 
-RegisterNUICallback('finance:withdraw', function(data, cb)
-    TriggerServerEvent('org-tablet:server:finance:withdraw', data.amount)
-    cb('ok')
-end)
-
-RegisterNUICallback('finance:getStats', function(data, cb)
-    TriggerServerEvent('org-tablet:server:finance:getStats')
-    cb('ok')
-end)
-
-RegisterNetEvent('org-tablet:client:finance:success', function(message)
-    ESX.ShowNotification(message, 'success')
-end)
-
-RegisterNetEvent('org-tablet:client:finance:error', function(message)
-    ESX.ShowNotification(message, 'error')
-end)
-
-RegisterNetEvent('org-tablet:client:finance:receiveStats', function(stats)
+-- Otrzymywanie danych finansowych
+RegisterNetEvent('org-tablet:client:receiveFinanceStats', function(stats)
+    financeStats = stats
+    
     SendNUIMessage({
         action = 'updateFinanceStats',
         stats = stats
     })
+end)
+
+RegisterNetEvent('org-tablet:client:receiveOrganizations', function(orgs)
+    organizations = orgs
+    
+    SendNUIMessage({
+        action = 'updateOrganizations',
+        organizations = orgs
+    })
+end)
+
+-- Callback z NUI
+RegisterNUICallback('getFinanceStats', function(data, cb)
+    TriggerServerEvent('org-tablet:server:getFinanceStats')
+    cb('ok')
+end)
+
+RegisterNUICallback('getOrganizations', function(data, cb)
+    TriggerServerEvent('org-tablet:server:getOrganizations')
+    cb('ok')
+end)
+
+RegisterNUICallback('transferMoney', function(data, cb)
+    TriggerServerEvent('org-tablet:server:transferMoney', data.targetOrg, data.amount, data.description)
+    cb('ok')
 end)

@@ -1,141 +1,171 @@
 
 Config = {}
 
--- Główna konfiguracja
-Config.Framework = 'esx' -- esx lub qbcore
-Config.UseOxInventory = true
-Config.UsableItem = 'org_tablet'
+-- Podstawowe ustawienia
+Config.Debug = true
+Config.UseOxInventory = true -- Ustaw na false jeśli używasz innego systemu inventory
+Config.UsableItem = 'org_tablet' -- Nazwa przedmiotu w bazie danych
 
--- Konfiguracja organizacji
-Config.Organizations = {
-    ['ballas'] = {
-        name = 'Ballas',
-        label = 'Grove Street Families',
-        grade_names = {
-            [0] = 'Rekrut',
-            [1] = 'Członek',
-            [2] = 'Starszy Członek',
-            [3] = 'Zastępca',
-            [4] = 'Przywódca',
-            [5] = 'Boss'
-        },
-        max_members = 50,
-        territory = {x = -2040.0, y = -90.0, z = 30.0},
-        apps = {
-            'finance', 'members', 'transactions', 'orders', 
-            'settings', 'stats', 'notes', 'apps'
-        }
-    },
-    ['vagos'] = {
-        name = 'Vagos',
-        label = 'Los Santos Vagos',
-        grade_names = {
-            [0] = 'Soldado',
-            [1] = 'Miembro',
-            [2] = 'Veterano',
-            [3] = 'Teniente',
-            [4] = 'Jefe',
-            [5] = 'Líder'
-        },
-        max_members = 45,
-        territory = {x = 331.0, y = -2040.0, z = 20.0},
-        apps = {
-            'finance', 'members', 'transactions', 'orders', 
-            'settings', 'stats', 'notes', 'apps'
-        }
-    }
+-- Uprawnienia organizacji
+Config.Permissions = {
+    ['manage_finances'] = 'Zarządzanie finansami',
+    ['manage_members'] = 'Zarządzanie członkami',
+    ['manage_crypto'] = 'Zarządzanie kryptowalutami',
+    ['view_tracker'] = 'Dostęp do trackera',
+    ['manage_jobs'] = 'Zarządzanie zleceniami',
+    ['manage_notes'] = 'Zarządzanie notatkami',
+    ['purchase_apps'] = 'Zakup aplikacji'
 }
 
--- Konfiguracja aplikacji sklepu
-Config.AppStore = {
-    ['zlecenia'] = {
-        name = 'Zlecenia',
-        description = 'System zarządzania zleceniami organizacji',
-        price = 2.5,
-        category = 'Biznes',
-        icon = 'briefcase'
-    },
-    ['kryptowaluty'] = {
-        name = 'Kryptowaluty',
-        description = 'Handel kryptowalutami i portfel',
-        price = 3.2,
-        category = 'Finanse',
-        icon = 'bitcoin'
-    },
-    ['napady'] = {
-        name = 'Napady',
-        description = 'Planowanie i zarządzanie napadami',
-        price = 4.8,
-        category = 'Akcja',
-        icon = 'crosshair'
-    },
-    ['tracker'] = {
-        name = 'Tracker Pojazdów',
-        description = 'Śledzenie pojazdów do kradzieży',
-        price = 6.5,
-        category = 'Narzędzia',
-        icon = 'map-pin'
-    }
+-- Stopnie organizacji
+Config.Grades = {
+    [0] = {label = 'Rekrut', salary = 0, permissions = {}},
+    [1] = {label = 'Członek', salary = 1000, permissions = {'view_tracker'}},
+    [2] = {label = 'Starszy Członek', salary = 2000, permissions = {'view_tracker', 'manage_notes'}},
+    [3] = {label = 'Starszy Członek', salary = 3000, permissions = {'view_tracker', 'manage_notes', 'manage_jobs'}},
+    [4] = {label = 'Zastępca', salary = 5000, permissions = {'view_tracker', 'manage_notes', 'manage_jobs', 'manage_finances'}},
+    [5] = {label = 'Zastępca', salary = 6000, permissions = {'view_tracker', 'manage_notes', 'manage_jobs', 'manage_finances', 'manage_members'}},
+    [6] = {label = 'Zastępca', salary = 7000, permissions = {'view_tracker', 'manage_notes', 'manage_jobs', 'manage_finances', 'manage_members', 'manage_crypto'}},
+    [7] = {label = 'Szef', salary = 10000, permissions = {'view_tracker', 'manage_notes', 'manage_jobs', 'manage_finances', 'manage_members', 'manage_crypto', 'purchase_apps'}}
 }
 
--- Konfiguracja kryptowalut
+-- Kryptowaluty
 Config.Crypto = {
     ['LCOIN'] = {
         name = 'Liberty Coin',
         icon = '🏛️',
         min_price = 2500.0,
         max_price = 3500.0,
-        volatility = 0.05
+        volatility = 0.05 -- 5% zmienność
     },
     ['VCASH'] = {
         name = 'Vice Cash',
         icon = '🌴',
         min_price = 1200.0,
         max_price = 1800.0,
-        volatility = 0.08
+        volatility = 0.03
     },
     ['SANCOIN'] = {
         name = 'San Andreas Coin',
         icon = '🏔️',
         min_price = 400.0,
         max_price = 700.0,
-        volatility = 0.12
-    }
-}
-
--- Konfiguracja trackera
-Config.VehicleTracker = {
-    cost_per_track = 2.5, -- Koszt w kryptowalutach
-    refresh_interval = 300000, -- 5 minut w ms
-    max_tracked_vehicles = 10,
-    vehicle_types = {
-        ['sports'] = {value_min = 80000, value_max = 150000, difficulty = 'Trudny'},
-        ['super'] = {value_min = 150000, value_max = 300000, difficulty = 'Trudny'},
-        ['sedans'] = {value_min = 30000, value_max = 80000, difficulty = 'Średni'},
-        ['suvs'] = {value_min = 50000, value_max = 120000, difficulty = 'Średni'},
-        ['compacts'] = {value_min = 15000, value_max = 40000, difficulty = 'Łatwy'}
-    }
-}
-
--- Konfiguracja finansów
-Config.Finance = {
-    daily_income = {
-        territory_control = 5000,
-        drug_sales = 3000,
-        protection_money = 2000
+        volatility = 0.07
     },
-    transaction_types = {
-        'income', 'expense', 'transfer', 'crypto_buy', 'crypto_sell'
+    ['NCCOIN'] = {
+        name = 'North Coast Coin',
+        icon = '🌊',
+        min_price = 150.0,
+        max_price = 350.0,
+        volatility = 0.04
+    },
+    ['BULLCOIN'] = {
+        name = 'Bull Coin',
+        icon = '🐂',
+        min_price = 50.0,
+        max_price = 150.0,
+        volatility = 0.10
+    },
+    ['LSCOIN'] = {
+        name = 'Los Santos Coin',
+        icon = '🌆',
+        min_price = 20.0,
+        max_price = 80.0,
+        volatility = 0.08
     }
 }
 
--- Lokalizacja
+-- Aplikacje do kupienia
+Config.Apps = {
+    ['zlecenia'] = {
+        name = 'Zlecenia',
+        description = 'System zarządzania zleceniami organizacji',
+        price = 50.0,
+        icon = '📋'
+    },
+    ['kryptowaluty'] = {
+        name = 'Kryptowaluty',
+        description = 'Handel i zarządzanie kryptowalutami',
+        price = 100.0,
+        icon = '💰'
+    },
+    ['napady'] = {
+        name = 'Napady',
+        description = 'Planowanie i organizacja napadów',
+        price = 200.0,
+        icon = '🎭'
+    },
+    ['tracker'] = {
+        name = 'Tracker',
+        description = 'Śledzenie pojazdów w mieście',
+        price = 75.0,
+        icon = '🚗'
+    }
+}
+
+-- Kategorie transakcji
+Config.TransactionCategories = {
+    income = {
+        'Sprzedaż',
+        'Inwestycje',
+        'Zlecenia',
+        'Napady',
+        'Inne'
+    },
+    expense = {
+        'Broń',
+        'Pojazdy',
+        'Ubrania',
+        'Wyposażenie',
+        'Opłaty',
+        'Inne'
+    }
+}
+
+-- Pojazdy GTA 5 do trackingu
+Config.VehicleModels = {
+    -- Supersport
+    'adder', 'banshee', 'bullet', 'cheetah', 'entityxf', 'infernus', 'monroe', 'vacca', 'voltic', 'zentorno',
+    -- Sport
+    'alpha', 'banshee2', 'bestiagts', 'blista2', 'blista3', 'buffalo', 'buffalo2', 'buffalo3', 'carbonizzare', 'comet2',
+    -- Sedan
+    'asea', 'asterope', 'cog55', 'cog552', 'cognoscenti', 'cognoscenti2', 'emperor', 'emperor2', 'emperor3', 'fugitive',
+    -- SUV
+    'baller', 'baller2', 'baller3', 'baller4', 'baller5', 'baller6', 'cavalcade', 'cavalcade2', 'contender', 'dubsta',
+    -- Compacts
+    'blista', 'brioso', 'dilettante', 'dilettante2', 'issi2', 'panto', 'prairie', 'rhapsody'
+}
+
+-- Lokalizacje
 Config.Locale = {
-    ['tablet_opened'] = 'Tablet organizacji został otwarty',
-    ['tablet_closed'] = 'Tablet organizacji został zamknięty',
     ['no_organization'] = 'Nie należysz do żadnej organizacji',
-    ['insufficient_rank'] = 'Niewystarczające uprawnienia',
-    ['transaction_success'] = 'Transakcja wykonana pomyślnie',
-    ['app_purchased'] = 'Aplikacja została zakupiona',
-    ['vehicle_tracked'] = 'Pojazd został namierzony'
+    ['no_permission'] = 'Nie masz uprawnień do wykonania tej czynności',
+    ['transaction_success'] = 'Transakcja została wykonana pomyślnie',
+    ['insufficient_funds'] = 'Niewystarczające środki',
+    ['member_invited'] = 'Zaproszenie zostało wysłane',
+    ['member_promoted'] = 'Członek został awansowany',
+    ['member_fired'] = 'Członek został wyrzucony',
+    ['crypto_bought'] = 'Kryptowaluta została zakupiona',
+    ['crypto_sold'] = 'Kryptowaluta została sprzedana',
+    ['note_saved'] = 'Notatka została zapisana',
+    ['note_deleted'] = 'Notatka została usunięta',
+    ['job_created'] = 'Zlecenie zostało utworzone',
+    ['job_assigned'] = 'Zlecenie zostało przydzielone',
+    ['job_completed'] = 'Zlecenie zostało ukończone',
+    ['vehicle_tracked'] = 'Pojazd został dodany do trackingu',
+    ['app_purchased'] = 'Aplikacja została zakupiona'
+}
+
+-- Ceny trackingu
+Config.TrackerPrices = {
+    ['Łatwy'] = 10.0,
+    ['Średni'] = 25.0,
+    ['Trudny'] = 50.0
+}
+
+-- Ustawienia NUI
+Config.NUI = {
+    ['tablet_width'] = 1024,
+    ['tablet_height'] = 768,
+    ['animation_speed'] = 300
 }
